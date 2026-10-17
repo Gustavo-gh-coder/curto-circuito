@@ -1,0 +1,1135 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>Curto-Circuito</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,400..900&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Conceito: o código de cores dos resistores. Cada questão é uma faixa (1 marrom, 2 vermelho, 3 laranja, 4 amarelo, 5 verde, final ouro)
+   e a tela inteira assume a cor da faixa. A transição entre questões é a faixa crescendo até ocupar a tela. Cantos retos em tudo. */
+:root{
+  --ink:#12161a;
+  --papel:#f7f8f6;
+  --corpo:#b8cfdf;
+  --campo:#b8cfdf;
+  --tinta:#12161a;
+  --acento:#12161a;
+  --f-disp:"Anybody","Arial Narrow",Impact,sans-serif;
+  --f-txt:"Atkinson Hyperlegible",Verdana,Tahoma,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--campo);color:var(--tinta);
+  font-family:var(--f-txt);font-size:18px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-font-smoothing:antialiased;
+}
+button,input{font:inherit;color:inherit}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:inherit}
+p{margin:0}
+ol,ul{margin:0;padding:0;list-style:none}
+:focus-visible{outline:3px solid var(--tinta);outline-offset:3px}
+
+/* frações */
+.frac{display:inline-flex;flex-direction:column;align-items:stretch;vertical-align:middle;text-align:center;margin:0 .16em;line-height:1.12;font-size:.88em}
+.frac .num{padding:0 .22em .1em;white-space:nowrap}
+.frac .den{white-space:nowrap;padding:.1em .22em 0;border-top:max(1.5px,.075em) solid currentColor}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* traços animados: cargas correndo nos fios */
+.fl{stroke:var(--pto,#f7f8f6);stroke-linecap:round;stroke-dasharray:0 22;animation:flui var(--v,1s) linear infinite}
+@keyframes flui{to{stroke-dashoffset:-22}}
+.cobre{fill:#c98a4b}
+.quente{animation:aquece 1.1s ease-in-out infinite alternate}
+@keyframes aquece{from{fill:#c98a4b}to{fill:#ff6a2a}}
+.faiscas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+.contorno{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.contorno rect{fill:none;stroke:var(--tinta);stroke-width:7}
+.gs .revelado .alt.certa{outline:none}
+.gs .conteudo{animation:none}
+.gs .numeral{animation:none}
+.numeral{--w:60}
+.marca .palavra span{--w:100}
+.gs .marca .palavra span{animation:none}
+.gs .resistor .banda{animation:none}
+.gs .anima .passos li{animation:none}
+
+/* botões */
+.btn{
+  cursor:pointer;border:0;border-radius:0;
+  background:var(--tinta);color:var(--campo);
+  font-family:var(--f-disp);font-weight:800;font-variation-settings:"wdth" 112;
+  font-size:1.15rem;padding:.7em 1.15em;display:inline-flex;align-items:center;gap:.7em;
+  transition:transform .12s ease;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.btn.linha{background:transparent;color:var(--tinta);box-shadow:inset 0 0 0 2.5px var(--tinta)}
+.btn small{font-family:var(--f-txt);font-weight:400;font-size:.72rem;opacity:.7;font-variation-settings:normal}
+.acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+/* transição: a próxima faixa cresce até cobrir a tela */
+.faixa-transicao{position:fixed;inset:0;z-index:50;pointer-events:none;background:var(--c);clip-path:inset(0 var(--d) 0 var(--e));transition:clip-path .62s cubic-bezier(.7,0,.2,1)}
+.faixa-transicao.cheia{clip-path:inset(0 0 0 0)}
+
+/* estrutura da tela do projetor */
+.tela{max-width:1600px;margin:0 auto;min-height:100%;padding-block:18px 22px;display:grid;grid-template-rows:auto 1fr;grid-template-columns:minmax(0,1fr);gap:18px}
+.topo{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.topo-esq{display:flex;align-items:center;gap:16px;min-width:0}
+.mini{width:190px;height:auto;flex:none}
+.topo .q{font-family:var(--f-disp);font-weight:800;font-size:1.1rem}
+.topo .sala{font-size:.95rem}
+.topo .sala b{font-family:var(--f-disp);font-weight:900;letter-spacing:.06em}
+.conteudo{min-width:0;animation:assenta .45s ease-out both}
+@keyframes assenta{from{opacity:0;transform:translateY(14px)}}
+
+/* lobby */
+.lobby{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,27vw);gap:28px 40px;align-items:start}
+.marca{font-family:var(--f-disp);font-weight:900;font-size:clamp(3rem,6.6vw,7.2rem);line-height:.84;letter-spacing:-.02em;margin:.08em 0 0;display:flex;flex-wrap:wrap}
+.marca .palavra{white-space:nowrap}
+.marca .palavra span{display:inline-block;font-variation-settings:"wdth" var(--w,100);animation:estica 1.4s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i) * 45ms)}
+@keyframes estica{0%{font-variation-settings:"wdth" 50;opacity:0}12%{opacity:1}35%{opacity:.25}45%{opacity:1}100%{font-variation-settings:"wdth" 100}}
+.subtitulo{font-size:1.2rem;max-width:48ch}
+.resistor{width:100%;max-width:max(820px,58vw);height:auto;display:block}
+.resistor .banda{transform-box:fill-box;transform-origin:50% 0;animation:cai .55s cubic-bezier(.2,1.3,.4,1) both;animation-delay:calc(.6s + var(--i) * 90ms)}
+@keyframes cai{from{transform:scaleY(0)}}
+.resistor text{font-family:var(--f-disp);font-weight:800;font-size:26px;fill:#12161a;text-anchor:middle}
+.resistor .fl{--pto:#f7f8f6}
+.legenda-res{font-size:clamp(1rem,1.1vw,1.3rem);max-width:62ch}
+.entrar{display:grid;gap:10px;counter-reset:p}
+.entrar li{counter-increment:p;display:grid;grid-template-columns:2.2ch minmax(0,1fr);gap:8px;font-size:1.05rem}
+.entrar li::before{content:counter(p);font-family:var(--f-disp);font-weight:900;font-size:1.5rem;line-height:1}
+.qr{background:var(--papel);padding:12px;width:100%;max-width:min(27vw,62vh)}
+.qr svg{display:block;width:100%;height:auto}
+.link{font-size:.85rem;word-break:break-all}
+.status{display:flex;gap:10px;align-items:baseline;font-size:.95rem;padding:10px 12px;box-shadow:inset 0 0 0 2px var(--tinta);max-width:66ch}
+.status::before{content:"";flex:none;width:12px;height:12px;background:var(--tinta);transform:translateY(1px)}
+.status.ok::before{background:#1f8f4a;box-shadow:0 0 0 2px var(--tinta)}
+.status.alerta::before{background:#d3271d;box-shadow:0 0 0 2px var(--tinta)}
+.add-eq{display:flex;gap:8px;max-width:520px}
+.add-eq input{background:var(--papel);color:#12161a;border:0;border-radius:0;padding:.65em .8em;min-width:0;flex:1 1 0;box-shadow:inset 0 -3px 0 var(--tinta)}
+.eq-titulo{font-family:var(--f-disp);font-weight:800;font-size:1.3rem;margin-bottom:10px}
+
+/* equipes */
+.equipes{display:flex;flex-wrap:wrap;gap:8px}
+.eq{display:flex;align-items:center;gap:9px;padding:7px 12px 7px 9px;box-shadow:inset 0 0 0 2.5px var(--tinta);font-weight:700}
+.eq.novo{animation:entra .45s cubic-bezier(.2,1.4,.4,1) both}
+.eq .cor{width:13px;height:22px;background:var(--c);box-shadow:0 0 0 2px var(--tinta);flex:none}
+.eq.feito{background:var(--tinta);color:var(--campo)}
+.eq.feito .cor{box-shadow:0 0 0 2px var(--campo)}
+.eq .manual{display:flex;gap:4px;margin-left:4px}
+.eq .manual button{border:0;border-radius:0;cursor:pointer;width:32px;height:32px;font-family:var(--f-disp);font-weight:900;background:var(--papel);color:#12161a}
+.eq .manual button.sel{background:var(--campo);color:var(--tinta);box-shadow:inset 0 0 0 2px var(--tinta)}
+@keyframes entra{from{transform:scale(.6);opacity:0}}
+.vazio{font-size:.95rem;opacity:.8}
+
+/* intro */
+.intro{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px 48px;align-items:center}
+.numeral{font-family:var(--f-disp);font-weight:900;font-size:min(62vh,34vw);line-height:.78;font-variation-settings:"wdth" var(--w,60);animation:numeral 1s cubic-bezier(.2,.9,.2,1) both}
+@keyframes numeral{from{font-variation-settings:"wdth" 150;opacity:0}}
+.intro h1{font-family:var(--f-disp);font-weight:900;font-size:clamp(2.6rem,5.6vw,5.4rem);line-height:.92;font-variation-settings:"wdth" 88}
+.ficha{display:flex;flex-wrap:wrap;gap:14px 36px;margin:22px 0 0}
+.ficha div{display:grid;gap:4px}
+.ficha dt{font-size:.85rem;opacity:.75}
+.ficha dd{margin:0;font-weight:700;font-size:1.1rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:.9rem;font-weight:700;padding:3px 9px;box-shadow:inset 0 0 0 2px currentColor}
+.contexto{font-size:clamp(1.2rem,1.9vw,1.6rem);max-width:44ch;margin:24px 0 26px}
+
+/* pergunta */
+.pergunta{display:grid;gap:18px}
+.cronometro{display:flex;align-items:baseline;gap:4px;font-family:var(--f-disp);font-weight:900;font-variant-numeric:tabular-nums}
+.cronometro b{font-size:clamp(3rem,7vw,6.5rem);line-height:.8;font-variation-settings:"wdth" 70}
+.cronometro span{font-size:1.4rem}
+.cronometro.fim b{animation:pisca .5s steps(2) infinite}
+@keyframes pisca{50%{opacity:.25}}
+.dreno{height:14px;position:relative;box-shadow:inset 0 0 0 2px var(--tinta)}
+.dreno i{position:absolute;inset:0 auto 0 0;background:var(--tinta);transition:width .25s linear;overflow:hidden}
+.dreno i::after{content:"";position:absolute;inset:3px 0;background:radial-gradient(circle,var(--campo) 0 2.2px,transparent 2.8px) 0 50%/22px 100% repeat-x;animation:corre .7s linear infinite}
+@keyframes corre{to{background-position:22px 50%}}
+.enunciado{font-size:clamp(1.4rem,2.5vw,2.3rem);font-weight:700;line-height:1.25;max-width:50ch}
+.corpo-q{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:start}
+.fig{width:min(380px,32vw);height:auto;display:block;color:var(--tinta);--pto:var(--campo);overflow:visible}
+.explica .fig{width:min(280px,100%);color:var(--papel);--pto:var(--acento);margin:2px 0 16px}
+.fig text{fill:currentColor;font-family:var(--f-disp);font-weight:800;font-size:21px}
+.alts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.alt{position:relative;background:var(--papel);color:#12161a;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;min-height:clamp(74px,12vh,120px)}
+.alt .letra{font-family:var(--f-disp);font-weight:900;font-size:clamp(2.6rem,5vw,4.4rem);line-height:1;width:1.4em;text-align:center;font-variation-settings:"wdth" 70}
+.alt .txt{font-size:clamp(1.05rem,1.7vw,1.5rem);font-weight:700;padding:12px 18px 12px 0;line-height:1.25;min-width:0}
+.alt .votos{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:0 16px 12px;font-weight:700}
+.alt .votos .medidor{flex:1;height:10px;box-shadow:inset 0 0 0 2px currentColor;position:relative}
+.alt .votos .medidor i{position:absolute;inset:0 auto 0 0;width:0;background:currentColor;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.alt .votos .quem{display:flex;gap:4px}
+.alt .votos .quem span{width:10px;height:20px;background:var(--c);box-shadow:0 0 0 2px currentColor}
+.revelado .alt.errada{background:transparent;color:var(--tinta);box-shadow:inset 0 0 0 2px var(--tinta);opacity:.55}
+.revelado .alt.certa{outline:6px solid var(--tinta);outline-offset:-1px}
+.revelado .alt.certa::after{content:"Correta";position:absolute;top:-16px;right:14px;background:var(--tinta);color:var(--campo);font-family:var(--f-disp);font-weight:900;padding:2px 10px;font-size:1rem}
+.rodape{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.contagem{font-size:1.1rem}
+.contagem b{font-family:var(--f-disp);font-weight:900;font-size:1.6rem}
+
+/* revelação */
+.revela{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+.revela .alts{grid-template-columns:1fr;gap:10px}
+.revela .alt{min-height:0}
+.revela .alt .letra{font-size:2.6rem}
+.revela .alt .txt{font-size:1.15rem;padding-block:10px}
+.explica{background:#12161a;color:var(--papel);padding:22px 24px 24px}
+.explica h2{font-family:var(--f-disp);font-weight:900;font-size:2rem;line-height:1;margin-bottom:14px;font-variation-settings:"wdth" 90}
+.explica h3{font-size:.9rem;font-weight:700;opacity:.7;margin:20px 0 8px}
+.passos{display:grid;gap:10px;counter-reset:s}
+.passos li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:6px;font-size:1.1rem;line-height:1.55;align-items:center}
+.passos li::before{content:counter(s);font-family:var(--f-disp);font-weight:900;font-size:1.4rem;line-height:1.05;color:var(--acento)}
+.anima .passos li{animation:passo .45s both}
+.anima .passos li:nth-child(2){animation-delay:.3s}
+.anima .passos li:nth-child(3){animation-delay:.6s}
+.anima .passos li:nth-child(4){animation-delay:.9s}
+.anima .passos li:nth-child(5){animation-delay:1.2s}
+@keyframes passo{from{opacity:.1;transform:translateX(-10px)}}
+.erradas{display:grid;gap:6px;font-size:.98rem;opacity:.88}
+.erradas b{font-family:var(--f-disp);font-weight:900;color:var(--acento);margin-right:8px}
+.explica .tag{color:var(--acento)}
+
+/* placar */
+.placar{display:grid;gap:22px;max-width:1150px}
+.placar h1{font-family:var(--f-disp);font-weight:900;font-size:clamp(3rem,7vw,6.5rem);line-height:.85;font-variation-settings:"wdth" 80}
+.tabela{display:grid;gap:10px}
+.linha-p{display:grid;grid-template-columns:2.4ch 16px minmax(0,1fr) auto;gap:16px;align-items:center;padding:10px 16px 10px 12px;background:var(--papel);color:#12161a}
+.linha-p .pos{font-family:var(--f-disp);font-weight:900;font-size:2.2rem;line-height:1;text-align:center}
+.linha-p .cor{height:42px;background:var(--c);box-shadow:0 0 0 2px #12161a}
+.linha-p .meio{min-width:0;display:grid;gap:7px}
+.linha-p .nome{font-weight:700;font-size:1.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linha-p .barra{height:10px;box-shadow:inset 0 0 0 2px #12161a;position:relative}
+.linha-p .barra i{position:absolute;inset:0 auto 0 0;width:0;background:#12161a;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.linha-p .num{text-align:right;font-variant-numeric:tabular-nums}
+.linha-p .num b{display:block;font-family:var(--f-disp);font-weight:900;font-size:2rem;line-height:1}
+.linha-p .num span{font-size:.9rem;font-weight:700}
+.vencedor{font-family:var(--f-disp);font-weight:900;font-size:clamp(3rem,9vw,8.5rem);line-height:.85;font-variation-settings:"wdth" 75;animation:numeral 1.1s cubic-bezier(.2,.9,.2,1) both;overflow-wrap:anywhere}
+
+/* gabarito */
+.gab{max-width:920px;margin:0 auto;padding-block:26px 60px;display:grid;gap:28px}
+.gab-topo{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap}
+.gab-topo h1{font-family:var(--f-disp);font-weight:900;font-size:clamp(2.6rem,6vw,4.4rem);line-height:.9}
+.gab-q{display:grid;gap:12px;padding:18px 20px 20px;background:var(--papel);color:#12161a;border-left:16px solid var(--c)}
+.gab-q h2{font-family:var(--f-disp);font-weight:900;font-size:1.7rem;line-height:1}
+.gab-q h2 span{font-size:.6em;font-weight:700;display:block;margin-bottom:4px}
+.gab-q ol{display:grid;gap:3px}
+.gab-q ol li{padding:4px 8px}
+.gab-q ol li.certa{background:#12161a;color:var(--papel);font-weight:700}
+.gab-q dl{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px 16px;margin:0}
+.gab-q dt{font-size:.9rem;opacity:.7}
+.gab-q dd{margin:0}
+.passos-gab{display:grid;gap:6px;list-style:decimal;padding-left:1.2em!important;line-height:1.6}
+
+/* celular */
+.cel{max-width:560px;margin:0 auto;min-height:100%;padding-block:14px 22px;display:flex;flex-direction:column;gap:14px}
+.cel-topo{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:3px solid var(--tinta)}
+.cel-topo .cor{width:12px;height:34px;background:var(--c);box-shadow:0 0 0 2px var(--tinta);flex:none}
+.cel-topo .quem{flex:1;min-width:0}
+.cel-topo .quem b{display:block;font-size:1.1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cel-topo .quem small{font-size:.8rem;opacity:.8}
+.cel-topo .pts{font-family:var(--f-disp);font-weight:900;font-size:1.9rem;font-variant-numeric:tabular-nums}
+.cel-marca{font-family:var(--f-disp);font-weight:900;font-size:clamp(3rem,15vw,4.6rem);line-height:.85;font-variation-settings:"wdth" 80;margin-top:8px}
+.cel form{display:grid;gap:10px}
+.cel label{font-size:.95rem}
+.cel input{background:var(--papel);color:#12161a;border:0;border-radius:0;padding:14px;font-size:1.3rem;width:100%;box-shadow:inset 0 -4px 0 var(--tinta)}
+.cel .btn{justify-content:center;font-size:1.4rem;padding:.75em}
+.grande{flex:1;display:grid;align-content:center;gap:12px;padding:20px 0}
+.grande h2{font-family:var(--f-disp);font-weight:900;font-size:clamp(3rem,16vw,5rem);line-height:.85;font-variation-settings:"wdth" 75}
+.grande p{font-size:1.1rem;max-width:30ch}
+.letra-escolhida{font-family:var(--f-disp);font-weight:900;font-size:min(36vh,56vw);line-height:.8;font-variation-settings:"wdth" 60;position:relative;justify-self:start;animation:numeral .8s cubic-bezier(.2,.9,.2,1) both}
+.letra-escolhida.riscada::after{content:"";position:absolute;left:-6%;right:-6%;top:46%;height:.09em;background:currentColor;transform:rotate(-14deg)}
+.ganho{font-family:var(--f-disp);font-weight:900;font-size:2rem!important}
+.cel-q{font-size:1.05rem;font-weight:700;line-height:1.3}
+.cel-q small{display:block;font-weight:400;margin-bottom:4px;opacity:.85}
+.cel-tempo{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;font-size:.95rem}
+.teclas{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1}
+.tecla{border:0;border-radius:0;cursor:pointer;background:var(--papel);color:#12161a;display:grid;grid-template-rows:1fr auto;text-align:left;padding:10px 12px 12px;min-height:150px;transition:transform .1s,opacity .2s}
+.tecla:active{transform:scale(.97)}
+.tecla .letra{font-family:var(--f-disp);font-weight:900;font-size:4.2rem;line-height:.9;font-variation-settings:"wdth" 70}
+.tecla .txt{font-size:.92rem;font-weight:700;line-height:1.2}
+.tecla:disabled{opacity:.35;cursor:default}
+.carregando{padding:40px 0;font-size:1.1rem}
+.pulso{display:inline-block;width:12px;height:12px;background:var(--tinta);margin-right:10px;animation:pisca 1s steps(2) infinite}
+
+@media (max-width:1000px){
+  .lobby,.revela{grid-template-columns:minmax(0,1fr)}
+  .qr{max-width:300px}
+  .intro{grid-template-columns:1fr}
+  .numeral{font-size:38vw}
+}
+@media (max-width:700px){
+  .alts{grid-template-columns:1fr}
+  .corpo-q{grid-template-columns:1fr}
+  .fig{width:100%;max-width:360px}
+  .mini{width:130px}
+  .marca{font-size:10vw}
+  .gab-q dl{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<div id="app"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/DrawSVGPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script>
+/* =========================================================================
+   CONEXÃO
+   Os celulares conversam com o computador do professor pelo ntfy.sh, um
+   serviço público e gratuito de mensagens. Não precisa de conta, chave nem
+   banco de dados. Se ele não responder, o jogo continua no modo manual.
+   ========================================================================= */
+const RELAY = new URLSearchParams(location.search).get("relay") || "https://ntfy.sh";
+/* Só preencha se abrir o jogo direto de um arquivo (pendrive). Ex.: "https://seunome.github.io/curto-circuito/" */
+const LINK_PUBLICO = "";
+
+/* =========================================================================
+   QUESTÕES (Etapa 2). certa: 0 = A, 1 = B, 2 = C, 3 = D. tempo em segundos.
+   ========================================================================= */
+const QUESTOES = [
+  {
+    titulo: "Quantos elétrons passam?",
+    nivel: "Cálculo",
+    conceitos: ["Corrente elétrica", "Carga elétrica", "Carga elementar"],
+    tempo: 60,
+    contexto: "Corrente é carga em movimento: quanta carga atravessa o fio a cada segundo. E toda carga é um múltiplo inteiro da carga de um único elétron.",
+    enunciado: "Um carregador de celular mantém uma corrente de 2 A no cabo durante 10 s. Quantos elétrons atravessaram uma seção do cabo nesse tempo? Use e = 1,6 × 10⁻¹⁹ C.",
+    alternativas: ["20 elétrons", "1,25 × 10²⁰ elétrons", "3,2 × 10⁻¹⁸ elétrons", "1,25 × 10¹⁹ elétrons"],
+    certa: 1,
+    passos: [
+      "Corrente é carga por tempo: i = ⟦q|Δt⟧. Então q = i · Δt = 2 A × 10 s = 20 C.",
+      "A carga é quantizada: q = n · e. Então n = ⟦q|e⟧.",
+      "n = ⟦20 C|1,6 × 10⁻¹⁹ C⟧ = 1,25 × 10²⁰ elétrons."
+    ],
+    erradas: {0: "20 é a carga em coulombs, não o número de elétrons.", 2: "Multiplicou q por e em vez de dividir.", 3: "Esqueceu o tempo e usou q = 2 C."},
+    justificativa: "q = i · Δt = 20 C e n = ⟦q|e⟧ = 1,25 × 10²⁰. Uma corrente comum move uma quantidade enorme de elétrons porque a carga de cada um é minúscula."
+  },
+  {
+    titulo: "O nó do circuito",
+    nivel: "Aplicação",
+    conceitos: ["Conservação da carga (lei dos nós)", "Corrente elétrica"],
+    tempo: 40,
+    contexto: "Num nó, três ou mais fios se encontram. Carga não é criada nem destruída ali, então tudo o que chega precisa sair.",
+    enunciado: "No nó P, chegam correntes de 5 A e 3 A. Por um dos fios saem 2 A. Qual é a corrente i no quarto fio, que também sai do nó?",
+    figura: "no",
+    alternativas: ["10 A", "0 A", "4 A", "6 A"],
+    certa: 3,
+    passos: [
+      "Lei dos nós (1ª lei de Kirchhoff): Σ i que entram = Σ i que saem.",
+      "Entram 5 + 3 = 8 A. Saem 2 + i.",
+      "8 = 2 + i, logo i = 6 A. Se a conta não fechasse, carga se acumularia no nó."
+    ],
+    erradas: {0: "Somou todas as correntes, sem separar entrada de saída.", 1: "Supôs que nada sobra para o quarto fio, mas só 2 dos 8 A saíram.", 2: "Trocou o sentido de alguma corrente: 5 − 3 + 2."},
+    justificativa: "Σ entram = Σ saem: 5 + 3 = 2 + i, então i = 6 A. É a conservação da carga aplicada a um ponto do circuito."
+  },
+  {
+    titulo: "Verão ou inverno?",
+    nivel: "Interpretação",
+    conceitos: ["Efeito Joule", "Resistor", "Resistência", "Diferença de potencial elétrico"],
+    tempo: 45,
+    contexto: "O chuveiro elétrico é um resistor: transforma energia elétrica em energia térmica pelo efeito Joule. A ddp da tomada não muda quando giramos a chave.",
+    enunciado: "Ao passar a chave do chuveiro de \"verão\" para \"inverno\", a água sai mais quente. A ddp da rede continua 220 V. O que acontece com a resistência ligada?",
+    alternativas: [
+      "Aumenta, porque resistência maior sempre gera mais calor",
+      "Não muda; o chuveiro só reduz a vazão da água",
+      "Diminui, porque com ddp fixa a potência é P = ⟦V²|R⟧",
+      "Aumenta, para que a corrente fique maior"
+    ],
+    certa: 2,
+    passos: [
+      "O que fica fixo é a ddp da rede: V = 220 V.",
+      "Lei de Ohm: i = ⟦V|R⟧. Resistência menor deixa passar mais corrente.",
+      "Potência dissipada: P = V · i = ⟦V²|R⟧. R menor, P maior, mais calor.",
+      "Exemplo: um chuveiro de 5500 W em 220 V tem R = ⟦V²|P⟧ = ⟦220²|5500⟧ = 8,8 Ω."
+    ],
+    erradas: {0: "P = R · i² parece dizer que R maior aquece mais, mas isso só vale com corrente fixa. Aqui a corrente muda junto.", 1: "A posição inverno muda o trecho de resistência ligado, não a vazão.", 3: "Resistência maior diminui a corrente, não aumenta."},
+    justificativa: "Com V fixa, P = ⟦V²|R⟧: menos resistência significa mais corrente e mais potência dissipada por efeito Joule."
+  },
+  {
+    titulo: "A resistência da extensão",
+    nivel: "Cálculo",
+    conceitos: ["Resistividade", "Resistência", "Condutor", "Condutividade"],
+    tempo: 60,
+    contexto: "A resistência de um fio depende do material, do comprimento e da espessura. O cobre é bom condutor porque tem resistividade muito baixa.",
+    enunciado: "Uma extensão tem 10 m de fio de cobre com seção de 1 mm². Qual a resistência desse fio? Use ρ do cobre = 1,7 × 10⁻⁸ Ω·m.",
+    alternativas: ["0,17 Ω", "1,7 × 10⁻⁷ Ω", "1,7 × 10⁻⁴ Ω", "5,9 Ω"],
+    certa: 0,
+    passos: [
+      "Converter a área para o SI: 1 mm² = (10⁻³ m)² = 10⁻⁶ m².",
+      "Segunda lei de Ohm: R = ⟦ρ · L|A⟧.",
+      "R = ⟦1,7 × 10⁻⁸ × 10|10⁻⁶⟧ = 0,17 Ω.",
+      "A condutividade é o inverso da resistividade: σ = ⟦1|ρ⟧ ≈ 5,9 × 10⁷ S/m, valor alto. Por isso fios são de cobre."
+    ],
+    erradas: {1: "Usou 1 m² no lugar de 1 mm²: faltou converter.", 2: "Converteu mm² como se fosse mm: 10⁻³ em vez de 10⁻⁶.", 3: "Inverteu a fórmula: calculou ⟦A|ρ · L⟧."},
+    justificativa: "R = ⟦ρ · L|A⟧ = ⟦1,7 × 10⁻⁸ × 10|10⁻⁶⟧ = 0,17 Ω, com a área convertida para m²."
+  },
+  {
+    titulo: "Fio fino esquenta?",
+    nivel: "Aplicação",
+    conceitos: ["Densidade da corrente elétrica", "Efeito Joule", "Resistividade"],
+    tempo: 60,
+    contexto: "Densidade de corrente mede quanta corrente passa por metro quadrado da seção do fio. Quanto mais concentrada a corrente, mais o fio esquenta.",
+    enunciado: "Dois fios de cobre de mesmo comprimento conduzem 10 A cada. O fio X tem seção de 2,5 mm² e o fio Y, de 1,0 mm². Qual a densidade de corrente no fio Y, e qual fio esquenta mais?",
+    figura: "fios",
+    alternativas: [
+      "J = 1 × 10⁷ A/m²; o fio X esquenta mais",
+      "J = 10 A/m²; o fio Y esquenta mais",
+      "J = 1 × 10⁷ A/m²; o fio Y esquenta mais",
+      "J = 4 × 10⁶ A/m²; os dois esquentam igual"
+    ],
+    certa: 2,
+    passos: [
+      "J = ⟦i|A⟧, com A em m²: 1,0 mm² = 10⁻⁶ m².",
+      "J = ⟦10 A|10⁻⁶ m²⟧ = 1 × 10⁷ A/m².",
+      "Pela relação J = n · e · v_{d}, as cargas em Y andam 2,5 vezes mais rápido que em X.",
+      "Y é mais fino, então R = ⟦ρ · L|A⟧ é 2,5 vezes maior. Com a mesma corrente, P = R · i²: Y dissipa 2,5 vezes mais calor.",
+      "Compare com a questão 3: lá a ddp era fixa e R menor aquecia mais. Aqui a corrente é fixa e R maior aquece mais."
+    ],
+    erradas: {0: "Acertou J, mas com corrente fixa quem tem mais resistência dissipa mais.", 1: "Não converteu mm² para m².", 3: "Usou a área do fio X (2,5 × 10⁻⁶ m²)."},
+    justificativa: "J = ⟦i|A⟧ = ⟦10|10⁻⁶⟧ = 1 × 10⁷ A/m². Com a mesma corrente, o fio mais fino tem resistência maior e dissipa mais (P = R · i²). Por isso aparelhos potentes pedem fio mais grosso."
+  }
+];
+
+/* código de cores: a faixa da questão é a cor do dígito */
+const CAMPOS = {
+  corpo: {c: "#b8cfdf", t: "#12161a", a: "#12161a", x: 50, nome: ""},
+  1: {c: "#7a4320", t: "#fbf3ea", a: "#e0a26b", x: 30, nome: "marrom"},
+  2: {c: "#d3271d", t: "#fff6f2", a: "#ff7b6b", x: 39, nome: "vermelho"},
+  3: {c: "#f0731a", t: "#12161a", a: "#ff9a4d", x: 48, nome: "laranja"},
+  4: {c: "#f6c915", t: "#12161a", a: "#f6c915", x: 57, nome: "amarelo"},
+  5: {c: "#1f8f4a", t: "#f2fbf5", a: "#5fd38b", x: 66, nome: "verde"},
+  ouro: {c: "#c9a13b", t: "#12161a", a: "#e5c46a", x: 82, nome: "ouro"},
+  aceso: {c: "#f7f8f6", t: "#12161a", a: "#12161a", x: 50, nome: ""}
+};
+const LETRAS = ["A", "B", "C", "D"];
+const CORES_EQ = ["#2b59c3", "#7d3cb5", "#ffffff", "#15181b", "#8b9298", "#17a398", "#c2187a", "#c0c6cb"];
+const BOTS = ["Ohm", "Volta", "Ampère", "Faraday"];
+
+/* ---------------- utilidades ---------------- */
+const app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const lerLS = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const gravarLS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const fmt = n => Number(n || 0).toLocaleString("pt-BR");
+const rid = (n = 6) => Array.from({length: n}, () => "abcdefghjkmnpqrstuvwxyz23456789"[Math.floor(Math.random() * 31)]).join("");
+const reduzido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* frações: ⟦numerador|denominador⟧ vira numerador sobre denominador */
+const mat = s => esc(s).replace(/_\{([^}]+)\}/g, "<sub>$1</sub>").replace(/⟦([^|⟧]+)\|([^⟧]+)⟧/g, '<span class="frac"><span class="num">$1</span><span class="sr"> dividido por </span><span class="den">$2</span></span>');
+/* animações: GSAP com DrawSVG e SplitText; sem eles (ou com movimento reduzido) tudo aparece parado */
+const G = (!reduzido && window.gsap && window.DrawSVGPlugin && window.SplitText) ? window.gsap : null;
+if (G) { G.registerPlugin(DrawSVGPlugin, SplitText); document.documentElement.classList.add("gs"); }
+/* faíscas: pequena explosão de partículas em canvas */
+const faiscas = (() => {
+  let cv, ctx, ps = [], rodando = false, dpr = 1;
+  const quadro = () => {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ps = ps.filter(p => p.vida > 0);
+    for (const p of ps) {
+      const x0 = p.x, y0 = p.y;
+      p.vx *= .97; p.vy = p.vy * .97 + .32 * dpr; p.x += p.vx; p.y += p.vy; p.vida -= p.dec;
+      ctx.strokeStyle = "rgba(" + p.c + "," + Math.max(0, p.vida) + ")"; ctx.lineWidth = p.w;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(p.x, p.y); ctx.stroke();
+    }
+    if (ps.length) requestAnimationFrame(quadro); else { rodando = false; ctx.clearRect(0, 0, cv.width, cv.height); }
+  };
+  return (x, y, n = 46) => {
+    if (reduzido) return;
+    if (!cv) { cv = document.createElement("canvas"); cv.className = "faiscas"; document.body.appendChild(cv); ctx = cv.getContext("2d"); }
+    if (!rodando) { dpr = devicePixelRatio || 1; cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; ctx.lineCap = "round"; }
+    const tinta = getComputedStyle(document.documentElement).getPropertyValue("--tinta").trim();
+    const rgb = /^#[0-9a-f]{6}$/i.test(tinta) ? [1, 3, 5].map(i => parseInt(tinta.slice(i, i + 2), 16)).join(",") : "18,22,26";
+    const cores = ["255,244,190", "255,206,64", "255,140,40", "255,255,255", rgb];
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, v = (3 + Math.random() * 11) * dpr;
+      ps.push({x: x * dpr, y: y * dpr, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 3 * dpr, vida: 1, dec: .014 + Math.random() * .026, w: (1.2 + Math.random() * 2.4) * dpr, c: cores[Math.floor(Math.random() * cores.length)]});
+    }
+    if (!rodando) { rodando = true; requestAnimationFrame(quadro); }
+  };
+})();
+const centro = el => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+let offset = 0; // relógio do servidor menos relógio local, em segundos
+const agoraS = () => Date.now() / 1000 + offset;
+
+function campoDe(f, q) {
+  if (f === "lobby") return "corpo";
+  if (f === "fim") return "ouro";
+  return q + 1;
+}
+function aplicarCampo(k) {
+  const c = CAMPOS[k], r = document.documentElement.style;
+  r.setProperty("--campo", c.c); r.setProperty("--tinta", c.t); r.setProperty("--acento", c.a);
+  document.documentElement.dataset.campo = k;
+}
+/* troca de tela: a faixa da próxima cor cresce até cobrir tudo */
+function trocar(k, desenhar) {
+  if (document.documentElement.dataset.campo === String(k) || reduzido) { aplicarCampo(k); desenhar(); return; }
+  const c = CAMPOS[k], f = document.createElement("div");
+  f.className = "faixa-transicao";
+  f.style.setProperty("--c", c.c);
+  f.style.setProperty("--e", (c.x - 3) + "%");
+  f.style.setProperty("--d", (100 - c.x - 3) + "%");
+  document.body.appendChild(f);
+  requestAnimationFrame(() => requestAnimationFrame(() => f.classList.add("cheia")));
+  setTimeout(() => { aplicarCampo(k); desenhar(); f.remove(); }, 640);
+}
+
+/* ---------------- resistores ---------------- */
+function resistorGrande() {
+  const bandas = [[1, 292], [2, 372], [3, 452], [4, 532], [5, 612], ["ouro", 712]];
+  let s = `<svg class="resistor" viewBox="0 0 1000 230" role="img" aria-label="Resistor com as faixas das questões: 1 marrom, 2 vermelho, 3 laranja, 4 amarelo, 5 verde e ouro no final">
+    <g stroke="#5d6a73" stroke-width="12"><line class="tr" x1="190" y1="100" x2="0" y2="100"/><line class="tr" x1="810" y1="100" x2="1000" y2="100"/></g>
+    <g class="fluxo"><line class="fl" x1="0" y1="100" x2="190" y2="100" style="--v:1.1s;stroke-width:9"/><line class="fl" x1="810" y1="100" x2="1000" y2="100" style="--v:1.1s;stroke-width:9"/></g>
+    <path class="corpo-res" d="M190 52 Q190 30 222 30 L300 30 Q318 30 330 46 L670 46 Q682 30 700 30 L778 30 Q810 30 810 52 L810 148 Q810 170 778 170 L700 170 Q682 170 670 154 L330 154 Q318 170 300 170 L222 170 Q190 170 190 148 Z" fill="#e5d3ae" stroke="#12161a" stroke-width="4"/>`;
+  bandas.forEach(([k, x], i) => {
+    const alto = x < 330 || x > 670;
+    s += `<rect class="banda" x="${x}" y="${alto ? 32 : 48}" width="44" height="${alto ? 136 : 104}" fill="${CAMPOS[k].c}"/>`;
+    s += `<text class="rot" x="${x + 22}" y="214">${k === "ouro" ? "Fim" : k}</text>`;
+  });
+  return s + `</svg>`;
+}
+function miniResistor(atual) {
+  const xs = [52, 80, 108, 136, 164];
+  let s = `<svg class="mini" viewBox="0 0 260 60" role="img" aria-label="Progresso: questão ${atual} de 5">
+    <line x1="0" y1="30" x2="260" y2="30" stroke="currentColor" stroke-width="4" opacity=".55"/>
+    <rect x="38" y="10" width="184" height="40" fill="#e5d3ae" stroke="currentColor" stroke-width="3"/>`;
+  xs.forEach((x, i) => {
+    const n = i + 1, op = atual === 0 || n <= atual ? 1 : .15;
+    s += `<rect x="${x}" y="11.5" width="16" height="37" fill="${CAMPOS[n].c}" opacity="${op}"/>`;
+    if (n === atual) s += `<rect x="${x - 4}" y="1.5" width="24" height="57" fill="none" stroke="currentColor" stroke-width="3"/>`;
+  });
+  s += `<rect x="196" y="11.5" width="14" height="37" fill="${CAMPOS.ouro.c}" opacity="${atual === 0 || atual === 6 ? 1 : .15}"/>`;
+  return s + `</svg>`;
+}
+
+/* ---------------- figuras ----------------
+   .tr = traço que se desenha; .fl = pontos (cargas) correndo no sentido da corrente.
+   A duração do fluxo é inversamente proporcional à corrente (ou à velocidade de deriva). */
+function figura(tipo, rev) {
+  const fl = (x1, y1, x2, y2, dur, w = 9) => `<line class="fl" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" style="--v:${dur}s;stroke-width:${w}"/>`;
+  if (tipo === "no") return `<svg class="fig" viewBox="0 0 340 214" role="img" aria-label="Nó P: entram 5 A pela esquerda e 3 A por cima; saem 2 A pela direita e i por baixo${rev ? ", que vale 6 A" : ""}">
+    <g stroke="currentColor" stroke-width="6" stroke-linecap="square">
+      <line class="tr" x1="16" y1="104" x2="160" y2="104"/><line class="tr" x1="170" y1="12" x2="170" y2="94"/>
+      <line class="tr" x1="180" y1="104" x2="324" y2="104"/><line class="tr" x1="170" y1="114" x2="170" y2="200"/></g>
+    <g class="fluxo">${fl(16, 104, 160, 104, .9)}${fl(170, 12, 170, 94, 1.5)}${fl(180, 104, 324, 104, 2.2)}${rev ? fl(170, 114, 170, 200, .75) : ""}</g>
+    <g fill="currentColor" class="pc"><polygon points="94,90 120,104 94,118"/><polygon points="156,40 170,66 184,40"/><polygon points="236,90 262,104 236,118"/><polygon points="156,148 170,174 184,148"/>
+      <rect x="158" y="92" width="24" height="24"/></g>
+    <g class="pc"><text x="30" y="86">5 A</text><text x="188" y="38">3 A</text><text x="268" y="86">2 A</text><text x="188" y="182">${rev ? "i = 6 A" : "i = ?"}</text><text x="134" y="90">P</text></g></svg>`;
+  if (tipo === "fios") return `<svg class="fig" viewBox="0 0 340 170" role="img" aria-label="Fio X grosso de 2,5 mm² e fio Y fino de 1,0 mm², ambos com 10 A${rev ? "; no fio fino as cargas correm 2,5 vezes mais rápido e ele aquece mais" : ""}">
+    <text x="0" y="50" class="pc">X</text><text x="0" y="128" class="pc">Y</text>
+    <rect class="tr cobre" x="30" y="30" width="200" height="28" stroke="currentColor" stroke-width="3"/>
+    <rect class="tr cobre${rev ? " quente" : ""}" x="30" y="115" width="200" height="12" stroke="currentColor" stroke-width="3"/>
+    ${rev ? `<g class="fluxo">${fl(36, 44, 224, 44, 2, 8)}${fl(36, 121, 224, 121, .8, 6)}</g>` : ""}
+    <g class="pc"><text x="242" y="51">2,5 mm²</text><text x="242" y="128">1,0 mm²</text>
+    <g fill="currentColor"><polygon points="110,70 126,78 110,86"/><polygon points="110,138 126,146 110,154"/></g>
+    <text x="134" y="86" style="font-size:17px">10 A</text><text x="134" y="154" style="font-size:17px">10 A</text></g></svg>`;
+  return "";
+}
+
+/* =========================================================================
+   TRANSPORTE: ntfy.sh (online) ou canal local (ensaio nesta máquina)
+   ========================================================================= */
+function transporteNtfy() {
+  return {
+    modo: "online",
+    async publicar(topico, obj) {
+      const r = await fetch(RELAY + "/" + topico, {method: "POST", body: JSON.stringify(obj)});
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const j = await r.json().catch(() => ({}));
+      if (typeof j.time === "number") offset = j.time - Date.now() / 1000;
+      return {time: j.time ?? Math.floor(agoraS())};
+    },
+    ouvir(topico, desde, cb, aoAbrir) {
+      const vistos = new Set();
+      const es = new EventSource(RELAY + "/" + topico + "/sse?since=" + desde);
+      es.onopen = () => aoAbrir && aoAbrir();
+      es.onmessage = e => {
+        let m; try { m = JSON.parse(e.data); } catch (_) { return; }
+        if (m.event !== "message" || vistos.has(m.id)) return;
+        vistos.add(m.id);
+        let o; try { o = JSON.parse(m.message); } catch (_) { return; }
+        cb(o, m.time);
+      };
+      return es;
+    }
+  };
+}
+function transporteLocal() {
+  let bc = null; try { bc = new BroadcastChannel("cc-relay"); } catch (e) {}
+  const mem = {}, ouvintes = [];
+  const ler = t => { try { return JSON.parse(localStorage.getItem("cc-r-" + t)) || mem[t] || []; } catch (e) { return mem[t] || []; } };
+  const gravar = (t, l) => { mem[t] = l; try { localStorage.setItem("cc-r-" + t, JSON.stringify(l)); } catch (e) {} };
+  const entregar = t => ouvintes.filter(o => o.t === t).forEach(o => ler(t).forEach(m => {
+    if (m.time >= o.desde && !o.vistos.has(m.id)) { o.vistos.add(m.id); o.cb(m.obj, m.time); }
+  }));
+  if (bc) bc.onmessage = e => entregar(e.data);
+  return {
+    modo: "ensaio",
+    async publicar(t, obj) {
+      const l = ler(t), m = {id: rid(10), time: Math.floor(Date.now() / 1000), obj};
+      l.push(m); if (l.length > 300) l.splice(0, l.length - 300);
+      gravar(t, l); if (bc) bc.postMessage(t); setTimeout(() => entregar(t));
+      return {time: m.time};
+    },
+    ouvir(t, desde, cb, aoAbrir) {
+      ouvintes.push({t, desde, cb, vistos: new Set()});
+      setTimeout(() => { entregar(t); aoAbrir && aoAbrir(); });
+      return {close() {}};
+    }
+  };
+}
+/* tenta o ntfy; se não abrir em 6 s, usa o modo local */
+function conectar(topicoTeste) {
+  return new Promise(ok => {
+    let es, feito = false;
+    const fim = v => { if (feito) return; feito = true; clearTimeout(timer); try { es && es.close(); } catch (e) {} ok(v); };
+    const timer = setTimeout(() => fim(transporteLocal()), 6000);
+    try { es = new EventSource(RELAY + "/" + topicoTeste + "/sse?since=" + Math.floor(Date.now() / 1000)); }
+    catch (e) { return fim(transporteLocal()); }
+    es.onopen = () => fim(transporteNtfy());
+    es.onerror = () => { if (es.readyState === 2) fim(transporteLocal()); };
+  });
+}
+const topicos = sala => ({h: "curtocircuito-" + sala + "-h", p: "curtocircuito-" + sala + "-p"});
+
+/* =========================================================================
+   TELA DO PROJETOR
+   ========================================================================= */
+let H, rede, T, chave = "", vendoGab = false, manual = false;
+const botsFeitos = {}, autoRev = {}, chipsVistos = new Set();
+
+function novoJogo() {
+  return {sala: rid(5), inicio: Math.floor(Date.now() / 1000) - 5, fase: "lobby", q: -1, equipes: {}, ordem: [], resp: {}, t0: {}, tRev: {}};
+}
+function salvar() { gravarLS("cc-host", JSON.stringify(H)); }
+const eqLista = () => H.ordem.filter(id => H.equipes[id]).map(id => ({id, ...H.equipes[id]}));
+const respQ = q => H.resp[q] || {};
+
+function pontos(q, id) {
+  const r = respQ(q)[id], t0 = H.t0[q];
+  if (!r || t0 == null || r.alt !== QUESTOES[q].certa) return 0;
+  const frac = Math.max(0, Math.min(1, 1 - (r.t - t0) / QUESTOES[q].tempo));
+  return 500 + Math.round(500 * frac);
+}
+function qContada() { return ["revelada", "placar", "fim"].includes(H.fase) ? H.q : H.q - 1; }
+function ranking() {
+  const ate = qContada();
+  return eqLista().map(e => {
+    let pts = 0; for (let q = 0; q <= ate; q++) pts += pontos(q, e.id);
+    return {...e, pts, ganho: ate >= 0 ? pontos(ate, e.id) : 0};
+  }).sort((a, b) => b.pts - a.pts || H.ordem.indexOf(a.id) - H.ordem.indexOf(b.id));
+}
+const restante = q => Math.max(0, QUESTOES[q].tempo - (agoraS() - H.t0[q]));
+
+function linkJogar() {
+  const base = LINK_PUBLICO || (location.protocol.startsWith("http") ? location.origin + location.pathname + location.search : location.href.split("#")[0]);
+  return base + "#jogar-" + H.sala + "-" + H.inicio;
+}
+
+async function iniciarTela() {
+  try { H = JSON.parse(lerLS("cc-host")); } catch (e) { H = null; }
+  if (!H || !H.sala) { H = novoJogo(); salvar(); }
+  aplicarCampo(campoDe(H.fase, H.q));
+  app.innerHTML = `<p class="carregando"><span class="pulso"></span>Conectando…</p>`;
+  T = topicos(H.sala);
+  rede = await conectar(T.h);
+  rede.ouvir(T.p, H.inicio, aoJogador);
+  publicarEstado();
+  chave = ""; atualizar();
+  setInterval(tick, 250);
+  document.addEventListener("keydown", teclado);
+  app.addEventListener("click", clique);
+  app.addEventListener("submit", ev => { if (ev.target.id === "fAdd") { ev.preventDefault(); addManual(); } });
+}
+
+/* mensagens que chegam dos celulares */
+function aoJogador(o, time) {
+  if (!o || typeof o !== "object") return;
+  if (o.t === "join" && typeof o.id === "string" && o.id.length < 20) {
+    if (!H.equipes[o.id]) {
+      const nome = String(o.nome || "Equipe").trim().slice(0, 18) || "Equipe";
+      H.equipes[o.id] = {nome, cor: CORES_EQ[H.ordem.length % CORES_EQ.length], bot: !!o.bot};
+      H.ordem.push(o.id); salvar(); atualizar();
+    }
+    publicarEstado();
+  }
+  if (o.t === "resp") {
+    const q = o.q, t0 = H.t0[q];
+    if (t0 == null || !H.equipes[o.id] || ![0, 1, 2, 3].includes(o.alt)) return;
+    H.resp[q] = H.resp[q] || {};
+    if (H.resp[q][o.id]) return;
+    const limite = Math.min(t0 + QUESTOES[q].tempo + 2, H.tRev[q] ?? Infinity);
+    if (time < t0 - 2 || time > limite) return;
+    H.resp[q][o.id] = {alt: o.alt, t: Math.max(time, t0)};
+    salvar(); atualizar();
+  }
+}
+
+/* estado enviado aos celulares: só quando a fase muda ou entra equipe */
+let pubTimer = null;
+function publicarEstado() {
+  clearTimeout(pubTimer);
+  pubTimer = setTimeout(() => {
+    const q = H.q, eq = ranking().map(e => [e.id, e.nome, e.cor, e.pts, e.ganho]);
+    rede.publicar(T.h, {v: 2, f: H.fase, q, t0: H.t0[q] ?? null, eq}).catch(() => setTimeout(publicarEstado, 3000));
+  }, 250);
+}
+
+function irPara(fase, q) {
+  H.fase = fase; H.q = q;
+  if (fase === "pergunta") { H.t0[q] = Math.floor(agoraS()); delete H.tRev[q]; }
+  if (fase === "revelada") H.tRev[q] = agoraS() + 1;
+  salvar(); publicarEstado(); atualizar();
+}
+function avancar() {
+  const ult = QUESTOES.length - 1;
+  if (H.fase === "lobby") { if (eqLista().length) irPara("intro", 0); return; }
+  if (H.fase === "intro") return irPara("pergunta", H.q);
+  if (H.fase === "pergunta") return irPara("revelada", H.q);
+  if (H.fase === "revelada") return irPara(H.q === ult ? "fim" : "placar", H.q);
+  if (H.fase === "placar") return irPara("intro", H.q + 1);
+}
+function addManual() {
+  const inp = document.getElementById("nomeAdd"), nome = inp.value.trim().slice(0, 18);
+  if (!nome) return;
+  const id = "m" + rid(6);
+  H.equipes[id] = {nome, cor: CORES_EQ[H.ordem.length % CORES_EQ.length], manual: true};
+  H.ordem.push(id); salvar(); publicarEstado(); atualizar();
+  inp.value = ""; inp.focus();
+}
+function simular() {
+  BOTS.forEach(nome => rede.publicar(T.p, {t: "join", id: "b" + rid(6), nome, bot: true}));
+}
+function rodarBots(q) {
+  if (rede.modo !== "ensaio" || botsFeitos[q]) return;
+  botsFeitos[q] = true;
+  const Q = QUESTOES[q];
+  eqLista().filter(e => e.bot).forEach(e => {
+    const alt = Math.random() < .65 ? Q.certa : [0, 1, 2, 3].filter(i => i !== Q.certa)[Math.floor(Math.random() * 3)];
+    setTimeout(() => { if (H.fase === "pergunta" && H.q === q) rede.publicar(T.p, {t: "resp", id: e.id, q, alt}); }, 1500 + Math.random() * Q.tempo * 500);
+  });
+}
+
+function clique(ev) {
+  const b = ev.target.closest("[data-a]"); if (!b) return;
+  const a = b.dataset.a;
+  if (a === "avancar") avancar();
+  if (a === "revelar" && H.fase === "pergunta") irPara("revelada", H.q);
+  if (a === "simular") { simular(); b.disabled = true; }
+  if (a === "manual") { manual = !manual; b.textContent = manual ? "Esconder marcação manual" : "Marcar respostas manualmente"; atualizarVivo(); }
+  if (a === "marcar" && H.fase === "pergunta") {
+    const q = H.q; H.resp[q] = H.resp[q] || {};
+    H.resp[q][b.dataset.id] = {alt: +b.dataset.alt, t: Math.floor(agoraS())};
+    salvar(); atualizar();
+  }
+  if (a === "gabarito") { vendoGab = true; trocar("corpo", () => { app.innerHTML = gabaritoHTML(true); scrollTo(0, 0); }); }
+  if (a === "voltar") { vendoGab = false; chave = ""; atualizar(); }
+  if (a === "reiniciar") {
+    if (!b.dataset.ok) {
+      b.dataset.ok = "1"; const txt = b.textContent; b.textContent = "Confirmar: apaga tudo";
+      setTimeout(() => { delete b.dataset.ok; b.textContent = txt; }, 3000); return;
+    }
+    try { localStorage.removeItem("cc-host"); } catch (e) {}
+    location.reload();
+  }
+}
+function teclado(ev) {
+  if (vendoGab) return;
+  if (ev.target.matches("input,textarea") && (ev.target.value || ev.key !== " ")) return;
+  if (ev.key === " " || ev.key === "ArrowRight") { ev.preventDefault(); document.activeElement?.blur(); avancar(); }
+  if ((ev.key === "r" || ev.key === "R") && H.fase === "pergunta") irPara("revelada", H.q);
+}
+
+/* desenho */
+function atualizar() {
+  if (vendoGab) return;
+  const k = H.fase + ":" + H.q;
+  if (k === chave) { atualizarVivo(); return; }
+  chave = k;
+  trocar(campoDe(H.fase, H.q), () => {
+    app.innerHTML = telaHTML();
+    if (H.fase === "lobby") desenharQR();
+    if (["revelada", "placar", "fim"].includes(H.fase)) requestAnimationFrame(() => requestAnimationFrame(() => {
+      app.querySelector(".tela")?.classList.add("anima");
+      app.querySelectorAll("[data-w]").forEach(el => el.style.width = el.dataset.w);
+    }));
+    atualizarVivo(); tick();
+    scrollTo(0, 0);
+    animar(H.fase);
+  });
+  if (H.fase === "pergunta") rodarBots(H.q);
+}
+
+function topoHTML(extra = "") {
+  const qn = H.fase === "lobby" ? 0 : H.fase === "fim" ? 6 : H.q + 1;
+  return `<header class="topo"><div class="topo-esq">${miniResistor(qn)}
+    ${qn >= 1 && qn <= 5 ? `<span class="q">Questão ${qn} de ${QUESTOES.length}</span>` : ""}</div>
+    ${extra || `<span class="sala">Sala <b>${H.sala.toUpperCase()}</b></span>`}</header>`;
+}
+function telaHTML() {
+  const f = H.fase;
+  const corpo = f === "lobby" ? lobbyHTML() : f === "intro" ? introHTML() : f === "pergunta" ? perguntaHTML() : f === "revelada" ? reveladaHTML() : placarHTML(f === "fim");
+  const extra = f === "pergunta" ? `<div class="cronometro" id="crono"><b id="seg">${QUESTOES[H.q].tempo}</b><span>s</span></div>` : "";
+  return `<div class="tela">${topoHTML(extra)}<main class="conteudo">${corpo}</main></div>`;
+}
+
+function lobbyHTML() {
+  const online = rede.modo === "online";
+  const letras = (txt, d) => [...txt].map((l, i) => `<span style="--i:${i + d}">${l}</span>`).join("");
+  return `<section class="lobby">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0;align-content:start">
+      <div>
+        <p class="subtitulo">Física II, eletrodinâmica. Cinco questões, um celular por equipe.</p>
+        <h1 class="marca" aria-label="Curto-Circuito"><span class="palavra" aria-hidden="true">${letras("Curto-", 0)}</span><span class="palavra" aria-hidden="true">${letras("Circuito", 6)}</span></h1>
+      </div>
+      ${resistorGrande()}
+      <p class="legenda-res">Cada questão tem a cor da sua faixa no código de cores dos resistores. Acertar vale 500 pontos, e responder rápido rende até 500 de bônus.</p>
+      <div class="acoes">
+        <button class="btn" data-a="avancar" id="btnIr" disabled>Começar <small>Espaço</small></button>
+        ${online ? "" : `<button class="btn linha" data-a="simular">Simular equipes</button>`}
+        <button class="btn linha" data-a="gabarito">Gabarito</button>
+        <button class="btn linha" data-a="reiniciar">Reiniciar</button>
+      </div>
+      <div style="margin-top:6px"><h2 class="eq-titulo">Equipes <span id="nEq">0</span></h2><ul class="equipes" id="lista"></ul></div>
+      <form class="add-eq" id="fAdd" autocomplete="off"><input id="nomeAdd" maxlength="18" placeholder="Equipe sem celular" aria-label="Nome da equipe sem celular"><button class="btn linha" type="submit">Adicionar</button></form>
+    </div>
+    <aside style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0">
+      <div class="qr" id="qr"></div>
+      <ol class="entrar"><li>Conecte no Wi-Fi ou 4G</li><li>Aponte a câmera para o código</li><li>Escreva o nome da equipe</li></ol>
+      ${online
+        ? `<p class="status ok">Conectado. Os celulares já podem entrar.</p>`
+        : `<p class="status alerta">Sem conexão com o servidor de mensagens: os celulares não entram. Simule equipes para ensaiar, ou cadastre as equipes abaixo e marque as respostas na tela.</p>`}
+      <p class="link">${esc(linkJogar())}</p>
+    </aside>
+  </section>`;
+}
+function desenharQR() {
+  const el = document.getElementById("qr"); if (!el) return;
+  try { const q = qrcode(0, "M"); q.addData(linkJogar()); q.make(); el.innerHTML = q.createSvgTag({cellSize: 8, margin: 0, scalable: true}); }
+  catch (e) { el.innerHTML = `<p style="color:#12161a">Use o link abaixo.</p>`; }
+}
+
+function introHTML() {
+  const Q = QUESTOES[H.q];
+  return `<section class="intro">
+    <div class="numeral" aria-hidden="true">${H.q + 1}</div>
+    <div>
+      <h1>${esc(Q.titulo)}</h1>
+      <dl class="ficha">
+        <div><dt>Nível</dt><dd>${Q.nivel}</dd></div>
+        <div><dt>Tempo</dt><dd>${Q.tempo} s</dd></div>
+        <div><dt>Conceitos do glossário</dt><dd class="tags">${Q.conceitos.map(c => `<span class="tag">${esc(c)}</span>`).join("")}</dd></div>
+      </dl>
+      <p class="contexto">${mat(Q.contexto)}</p>
+      <button class="btn" data-a="avancar">Abrir a questão <small>Espaço</small></button>
+    </div>
+  </section>`;
+}
+
+function altsHTML(revelado) {
+  const Q = QUESTOES[H.q], r = respQ(H.q), eqs = eqLista(), tot = Math.max(1, Object.keys(r).length);
+  return `<ol class="alts${revelado ? " revelado" : ""}">${Q.alternativas.map((t, i) => {
+    let votos = "";
+    if (revelado) {
+      const quem = eqs.filter(e => r[e.id] && r[e.id].alt === i);
+      votos = `<div class="votos"><span class="medidor"><i data-w="${Math.round(quem.length / tot * 100)}%"></i></span>${quem.length}<span class="quem">${quem.map(e => `<span style="--c:${e.cor}" title="${esc(e.nome)}"></span>`).join("")}</span></div>`;
+    }
+    return `<li class="alt${revelado ? (i === Q.certa ? " certa" : " errada") : ""}"><span class="letra">${LETRAS[i]}</span><span class="txt">${mat(t)}</span>${votos}</li>`;
+  }).join("")}</ol>`;
+}
+
+function perguntaHTML() {
+  const Q = QUESTOES[H.q];
+  return `<section class="pergunta">
+    <div class="dreno" id="dreno"><i style="width:100%"></i></div>
+    <div class="corpo-q"><h1 class="enunciado">${mat(Q.enunciado)}</h1>${figura(Q.figura, false)}</div>
+    ${altsHTML(false)}
+    <div style="display:grid;gap:12px">
+      <ul class="equipes" id="lista"></ul>
+      <div class="rodape"><p class="contagem" id="contagem"></p>
+        <div class="acoes"><button class="btn linha" data-a="manual">${manual ? "Esconder marcação manual" : "Marcar respostas manualmente"}</button><button class="btn" data-a="revelar">Revelar <small>R</small></button></div></div>
+    </div>
+  </section>`;
+}
+
+function reveladaHTML() {
+  const Q = QUESTOES[H.q], r = respQ(H.q), eqs = eqLista();
+  const acertos = eqs.filter(e => r[e.id] && r[e.id].alt === Q.certa).length, ult = H.q === QUESTOES.length - 1;
+  return `<section style="display:grid;gap:18px">
+    <div class="revela">
+      <div style="display:grid;gap:14px;min-width:0">
+        <p class="contagem"><b>${acertos}</b> de ${eqs.length} equipes acertaram</p>
+        <h1 class="enunciado" style="font-size:clamp(1.1rem,1.6vw,1.45rem)">${mat(Q.enunciado)}</h1>${altsHTML(true)}</div>
+      <aside class="explica">
+        <h2>Como chegar lá</h2>
+        ${Q.figura ? figura(Q.figura, true) : ""}
+        <ol class="passos">${Q.passos.map(p => `<li><span>${mat(p)}</span></li>`).join("")}</ol>
+        <h3>Por que as outras estão erradas</h3>
+        <ul class="erradas">${Object.entries(Q.erradas).map(([i, t]) => `<li><b>${LETRAS[i]}</b>${mat(t)}</li>`).join("")}</ul>
+        <h3>Conceitos do glossário</h3>
+        <div class="tags">${Q.conceitos.map(c => `<span class="tag">${esc(c)}</span>`).join("")}</div>
+      </aside>
+    </div>
+    <div class="acoes"><button class="btn" data-a="avancar">${ult ? "Resultado final" : "Placar"} <small>Espaço</small></button></div>
+  </section>`;
+}
+
+function placarHTML(fim) {
+  const rk = ranking(), max = Math.max(1, ...rk.map(e => e.pts));
+  return `<section class="placar">
+    ${fim && rk[0] ? `<div><p style="font-size:1.3rem;font-weight:700">Vencedora, com ${fmt(rk[0].pts)} pontos</p><h1 class="vencedor">${esc(rk[0].nome)}</h1></div>` : `<h1>Placar</h1>`}
+    <ol class="tabela">${rk.map((e, i) => `<li class="linha-p">
+      <span class="pos">${i + 1}</span><span class="cor" style="--c:${e.cor}"></span>
+      <span class="meio"><span class="nome">${esc(e.nome)}</span><span class="barra"><i data-w="${Math.round(e.pts / max * 100)}%"></i></span></span>
+      <span class="num"><b data-de="${e.pts - e.ganho}" data-para="${e.pts}">${fmt(e.pts)}</b><span>+${fmt(e.ganho)}</span></span></li>`).join("")}</ol>
+    <div class="acoes">${fim
+      ? `<button class="btn" data-a="gabarito">Gabarito</button><button class="btn linha" data-a="reiniciar">Nova partida</button>`
+      : `<button class="btn" data-a="avancar">Próxima questão <small>Espaço</small></button>`}</div>
+  </section>`;
+}
+
+function atualizarVivo() {
+  const eqs = eqLista(), lista = document.getElementById("lista");
+  if (lista) {
+    const r = H.fase === "pergunta" ? respQ(H.q) : {};
+    const html = eqs.length ? eqs.map(e => `<li class="eq${H.fase === "pergunta" && r[e.id] ? " feito" : ""}${chipsVistos.has(e.id) ? "" : " novo"}"><span class="cor" style="--c:${e.cor}"></span>${esc(e.nome)}${
+      H.fase === "pergunta" && manual ? `<span class="manual">${LETRAS.map((l, i) => `<button data-a="marcar" data-id="${e.id}" data-alt="${i}" class="${r[e.id] && r[e.id].alt === i ? "sel" : ""}" aria-label="${esc(e.nome)} marcou ${l}">${l}</button>`).join("")}</span>` : ""}</li>`).join("")
+      : `<li class="vazio">Nenhuma equipe ainda. Escaneiem o código.</li>`;
+    if (lista.dataset.h !== html.replace(/ novo/g, "")) { lista.innerHTML = html; lista.dataset.h = html.replace(/ novo/g, ""); }
+    eqs.forEach(e => chipsVistos.add(e.id));
+  }
+  const n = document.getElementById("nEq"); if (n) n.textContent = eqs.length;
+  const ir = document.getElementById("btnIr"); if (ir) ir.disabled = !eqs.length;
+  const c = document.getElementById("contagem");
+  if (c && H.fase === "pergunta") c.innerHTML = `<b>${Object.keys(respQ(H.q)).length}</b> de ${eqs.length} equipes responderam`;
+}
+
+function tick() {
+  if (H.fase !== "pergunta" || vendoGab) return;
+  const q = H.q, dur = QUESTOES[q].tempo, rest = restante(q);
+  const s = document.getElementById("seg"); if (s) s.textContent = Math.ceil(rest);
+  document.getElementById("crono")?.classList.toggle("fim", rest <= 5);
+  const d = document.querySelector("#dreno i"); if (d) d.style.width = (rest / dur * 100) + "%";
+  const eqs = eqLista(), n = Object.keys(respQ(q)).length;
+  if (!autoRev[q] && (rest <= 0 || (eqs.length && n >= eqs.length && !manual))) {
+    autoRev[q] = true;
+    setTimeout(() => { if (H.fase === "pergunta" && H.q === q) irPara("revelada", q); }, 1300);
+  }
+}
+
+/* =========================================================================
+   ANIMAÇÕES (GSAP). Cada tela tem uma entrada; sem GSAP tudo já aparece parado.
+   ========================================================================= */
+function desenharTracos(raiz, atraso = 0) {
+  if (!G) return;
+  const tr = raiz.querySelectorAll(".tr"), pc = raiz.querySelectorAll(".pc"), fx = raiz.querySelectorAll(".fluxo");
+  const tl = G.timeline({delay: atraso});
+  if (tr.length) tl.from(tr, {drawSVG: 0, duration: .7, stagger: .12, ease: "power2.inOut"});
+  if (pc.length) tl.from(pc, {opacity: 0, duration: .35, stagger: .05}, "-=.2");
+  if (fx.length) tl.from(fx, {opacity: 0, duration: .4}, "<");
+  return tl;
+}
+function animar(fase) {
+  if (!G) return;
+  const $ = q => app.querySelector(q), $$ = q => app.querySelectorAll(q);
+  if (fase === "lobby") {
+    const tl = G.timeline();
+    tl.from(".marca .palavra span", {yPercent: 110, "--w": 40, opacity: 0, duration: .8, stagger: .035, ease: "expo.out"})
+      .from(".resistor .tr", {drawSVG: 0, duration: .7, ease: "power2.inOut"}, "-=.5")
+      .from(".resistor .corpo-res", {drawSVG: 0, fillOpacity: 0, duration: .8, ease: "power2.inOut"}, "<.1")
+      .from(".resistor .banda", {scaleY: 0, transformOrigin: "50% 0%", duration: .5, stagger: .08, ease: "back.out(2)"}, "-=.3")
+      .from(".resistor .rot", {opacity: 0, y: 10, duration: .3, stagger: .05}, "-=.4")
+      .from(".resistor .fluxo", {opacity: 0, duration: .5}, "-=.2")
+      .from([".legenda-res", ".lobby .acoes", "#qr", ".entrar li", ".status"], {opacity: 0, y: 16, duration: .45, stagger: .06, ease: "power3.out"}, "-=.6");
+    return;
+  }
+  if (fase === "intro") {
+    const tl = G.timeline();
+    tl.from(".numeral", {"--w": 150, scale: .7, opacity: 0, duration: .9, ease: "expo.out"});
+    const sp = SplitText.create(".intro h1", {type: "words", mask: "words"});
+    tl.from(sp.words, {yPercent: 110, duration: .7, stagger: .07, ease: "expo.out"}, "-=.6")
+      .from(".ficha > div, .ficha .tag", {opacity: 0, y: 12, duration: .35, stagger: .05}, "-=.3")
+      .from(".contexto, .intro .btn", {opacity: 0, y: 18, duration: .5, stagger: .1, ease: "power3.out"}, "-=.2");
+    return;
+  }
+  if (fase === "pergunta") {
+    const tl = G.timeline();
+    tl.from(".dreno", {scaleX: 0, transformOrigin: "0 50%", duration: .6, ease: "power3.inOut"})
+      .from(".enunciado", {opacity: 0, y: 20, duration: .5, ease: "power3.out"}, "-=.3")
+      .from(".alt", {opacity: 0, y: 26, duration: .5, stagger: .08, ease: "power3.out"}, "-=.2")
+      .from(".pergunta .rodape, .pergunta .equipes", {opacity: 0, duration: .4}, "-=.2");
+    const f = $(".corpo-q .fig"); if (f) desenharTracos(f, .3);
+    return;
+  }
+  if (fase === "revelada") {
+    const certa = $(".alt.certa");
+    if (certa) {
+      const r = certa.getBoundingClientRect();
+      certa.insertAdjacentHTML("beforeend", `<svg class="contorno" viewBox="0 0 ${r.width} ${r.height}" preserveAspectRatio="none" aria-hidden="true"><rect x="3" y="3" width="${r.width - 6}" height="${r.height - 6}"/></svg>`);
+      G.from(certa.querySelector(".contorno rect"), {drawSVG: 0, duration: .9, delay: .25, ease: "power2.inOut", onComplete: () => { const b = certa.getBoundingClientRect(); faiscas(b.right - 10, b.top + 4, 50); }});
+    }
+    const tl = G.timeline({delay: .2});
+    tl.from(".explica", {opacity: 0, x: 40, duration: .55, ease: "power3.out"})
+      .from(".explica .passos li", {opacity: 0, x: -14, duration: .45, stagger: .35, ease: "power2.out"}, "-=.1")
+      .from(".explica .erradas li, .explica .tags", {opacity: 0, duration: .3, stagger: .08}, "-=.2");
+    const f = $(".explica .fig"); if (f) desenharTracos(f, .4);
+    return;
+  }
+  if (fase === "placar" || fase === "fim") {
+    const tl = G.timeline();
+    if (fase === "fim") {
+      const sp = SplitText.create(".vencedor", {type: "chars", mask: "chars"});
+      tl.from(sp.chars, {yPercent: 110, duration: .8, stagger: .04, ease: "expo.out", onComplete: () => {
+        const v = $(".vencedor"); if (!v) return; const [x, y] = centro(v);
+        faiscas(x, y, 90); setTimeout(() => faiscas(x - 160, y + 20, 50), 260); setTimeout(() => faiscas(x + 160, y, 50), 480);
+      }});
+    } else tl.from(".placar h1", {yPercent: 40, opacity: 0, duration: .6, ease: "expo.out"});
+    tl.from(".linha-p", {opacity: 0, x: -40, duration: .5, stagger: .09, ease: "power3.out"}, "-=.3");
+    $$(".linha-p .num b").forEach(b => {
+      const o = {v: +b.dataset.de};
+      tl.to(o, {v: +b.dataset.para, duration: 1.1, ease: "power2.out", onUpdate: () => { b.textContent = fmt(Math.round(o.v)); }}, "<.05");
+    });
+  }
+}
+
+/* =========================================================================
+   GABARITO
+   ========================================================================= */
+function gabaritoHTML(noJogo) {
+  return `<div class="gab">
+    <div class="gab-topo"><h1>Gabarito comentado</h1>${noJogo ? `<button class="btn" data-a="voltar">Voltar ao jogo</button>` : ""}</div>
+    ${QUESTOES.map((Q, q) => `<article class="gab-q" style="--c:${CAMPOS[q + 1].c}">
+      <h2><span>Questão ${q + 1}, faixa ${CAMPOS[q + 1].nome}</span>${esc(Q.titulo)}</h2>
+      <p>${mat(Q.enunciado)}</p>
+      <ol>${Q.alternativas.map((t, i) => `<li class="${i === Q.certa ? "certa" : ""}">${LETRAS[i]}) ${mat(t)}</li>`).join("")}</ol>
+      <dl><dt>Alternativa correta</dt><dd><b>${LETRAS[Q.certa]}</b></dd>
+        <dt>Resolução</dt><dd><ol class="passos-gab">${Q.passos.map(p => `<li>${mat(p)}</li>`).join("")}</ol></dd>
+        <dt>Justificativa</dt><dd>${mat(Q.justificativa)}</dd>
+        <dt>Conceitos do glossário</dt><dd>${Q.conceitos.map(esc).join(", ")}</dd>
+        <dt>Nível</dt><dd>${Q.nivel}</dd></dl>
+    </article>`).join("")}
+  </div>`;
+}
+
+/* =========================================================================
+   CELULAR DA EQUIPE
+   ========================================================================= */
+let P = null, chaveCel = "";
+
+async function iniciarCelular(sala, inicio) {
+  P = {sala, inicio, id: lerLS("cc-eq-" + sala), estado: null, minhas: {}, entrando: false};
+  try { P.minhas = JSON.parse(lerLS("cc-minhas-" + sala)) || {}; } catch (e) {}
+  aplicarCampo("corpo");
+  app.innerHTML = `<div class="cel" id="cel"><p class="carregando"><span class="pulso"></span>Conectando à sala ${esc(sala.toUpperCase())}…</p></div>`;
+  T = topicos(sala);
+  rede = await conectar(T.h);
+  rede.ouvir(T.h, inicio, (o, time) => {
+    if (!o || o.v !== 2) return;
+    const d = time - Date.now() / 1000;
+    if (Math.abs(d) < 60) offset = d;
+    P.estado = o; desenharCel();
+  });
+  chaveCel = ""; desenharCel();
+  setInterval(tickCel, 250);
+  app.addEventListener("click", cliqueCel);
+  app.addEventListener("submit", entrar);
+}
+
+const euNoJogo = () => P.estado && P.id && P.estado.eq.find(e => e[0] === P.id);
+
+function desenharCel() {
+  const e = P.estado, eu = euNoJogo();
+  if (eu) P.entrando = false;
+  const f = e ? e.f : "lobby", q = e ? e.q : -1, minha = P.minhas[q];
+  const k = [eu ? "eu" : P.entrando ? "entrando" : "novo", f, q, minha ?? "-", eu ? eu[3] : "", e ? 1 : 0].join(":");
+  if (k === chaveCel) return;
+  chaveCel = k;
+  const acertou = eu && f === "revelada" && minha != null && minha === QUESTOES[q].certa;
+  trocar(!eu ? "corpo" : acertou ? "aceso" : campoDe(f, q), () => {
+    document.getElementById("cel").innerHTML = eu ? celJogo(e, eu, minha) : celEntrar();
+    tickCel();
+    if (acertou) { const l = document.querySelector(".letra-escolhida"); if (l) setTimeout(() => { const [x, y] = centro(l); faiscas(x, y, 70); }, 350); }
+  });
+}
+
+function celEntrar() {
+  if (P.entrando) return `<div class="grande"><h2>Entrando…</h2><p>Esperando o computador do professor confirmar a equipe.</p></div>`;
+  const offline = rede.modo !== "online";
+  return `<p style="font-size:.95rem">Física II, sala ${esc(P.sala.toUpperCase())}</p>
+    <h1 class="cel-marca">Curto-Circuito</h1>
+    ${offline ? `<p class="status alerta">Sem conexão com o servidor de mensagens. Confira a internet do celular e recarregue a página.</p>` : ""}
+    ${!P.estado && !offline ? `<p class="status">Ainda não recebi nada do projetor. Confira se o jogo está aberto lá.</p>` : ""}
+    <form id="fEq" autocomplete="off"><label for="nomeEq">Nome da equipe</label>
+      <input id="nomeEq" maxlength="18" required placeholder="Ex.: Os Resistores">
+      <button class="btn" type="submit">Entrar no jogo</button></form>`;
+}
+function entrar(ev) {
+  if (ev.target.id !== "fEq") return;
+  ev.preventDefault();
+  const nome = document.getElementById("nomeEq").value.trim().slice(0, 18); if (!nome) return;
+  P.id = P.id || "e" + rid(7); gravarLS("cc-eq-" + P.sala, P.id);
+  P.entrando = true; desenharCel();
+  const enviar = (n = 0) => rede.publicar(T.p, {t: "join", id: P.id, nome}).catch(() => n < 4 && setTimeout(() => enviar(n + 1), 2500));
+  enviar();
+  setTimeout(() => { if (!euNoJogo()) { P.entrando = false; desenharCel(); } }, 12000);
+}
+
+function celJogo(e, eu, minha) {
+  const pos = e.eq.findIndex(x => x[0] === P.id) + 1;
+  const topo = `<div class="cel-topo"><span class="cor" style="--c:${eu[2]}"></span><span class="quem"><b>${esc(eu[1])}</b><small>Sala ${esc(P.sala.toUpperCase())}</small></span><span class="pts">${fmt(eu[3])}</span></div>`;
+  if (e.f === "lobby") return topo + `<div class="grande"><h2>Equipe dentro</h2><p>Olhem para o projetor. A primeira questão abre em instantes.</p></div>`;
+  const Q = QUESTOES[e.q];
+  if (e.f === "intro") return topo + `<div class="grande"><p>Questão ${e.q + 1}</p><h2>${esc(Q.titulo)}</h2><p>As alternativas aparecem aqui quando a questão abrir.</p></div>`;
+  if (e.f === "pergunta") {
+    if (minha != null) return topo + `<div class="grande"><p>Resposta enviada</p><div class="letra-escolhida">${LETRAS[minha]}</div><p>Esperem a revelação no projetor.</p></div>`;
+    return topo + `<p class="cel-q"><small>Questão ${e.q + 1} de ${QUESTOES.length}</small>${mat(Q.enunciado)}</p>
+      <div class="cel-tempo"><span>Toque na alternativa</span><span id="tCel"></span></div>
+      <div class="teclas">${Q.alternativas.map((t, i) => `<button class="tecla" data-alt="${i}"><span class="letra">${LETRAS[i]}</span><span class="txt">${mat(t)}</span></button>`).join("")}</div>`;
+  }
+  if (e.f === "revelada") {
+    if (minha == null) return topo + `<div class="grande"><h2>Sem resposta</h2><p>A certa era ${LETRAS[Q.certa]}. Vejam a explicação no projetor.</p></div>`;
+    return topo + (minha === Q.certa
+      ? `<div class="grande"><p>Circuito fechado</p><h2>Acertou</h2><div class="letra-escolhida">${LETRAS[minha]}</div><p class="ganho">+${fmt(eu[4])} pontos</p></div>`
+      : `<div class="grande"><p>Circuito aberto</p><h2>Errou</h2><div class="letra-escolhida riscada">${LETRAS[minha]}</div><p>A certa era <b>${LETRAS[Q.certa]}</b>. A explicação está no projetor.</p></div>`);
+  }
+  const fim = e.f === "fim";
+  return topo + `<div class="grande"><p>${fim ? "Resultado final" : "Placar"}</p><h2>${pos}º lugar</h2><p>de ${e.eq.length} equipes, com ${fmt(eu[3])} pontos.${fim && pos === 1 ? " Vocês venceram." : ""}</p></div>`;
+}
+
+function cliqueCel(ev) {
+  const t = ev.target.closest("[data-alt]"); if (!t || t.disabled) return;
+  const e = P.estado; if (!e || e.f !== "pergunta" || P.minhas[e.q] != null) return;
+  const alt = +t.dataset.alt, q = e.q;
+  P.minhas[q] = alt; gravarLS("cc-minhas-" + P.sala, JSON.stringify(P.minhas));
+  const enviar = (n = 0) => rede.publicar(T.p, {t: "resp", id: P.id, q, alt}).catch(() => n < 3 && setTimeout(() => enviar(n + 1), 1200));
+  enviar(); desenharCel();
+}
+function tickCel() {
+  const el = document.getElementById("tCel"), e = P && P.estado;
+  if (!el || !e || e.f !== "pergunta" || e.t0 == null) return;
+  const rest = Math.max(0, QUESTOES[e.q].tempo - (agoraS() - e.t0));
+  el.textContent = Math.ceil(rest) + " s";
+  if (rest <= 0) document.querySelectorAll(".tecla").forEach(b => b.disabled = true);
+}
+
+/* =========================================================================
+   INÍCIO
+   ========================================================================= */
+(function () {
+  const h = location.hash.slice(1);
+  if (h === "gabarito") { aplicarCampo("corpo"); app.innerHTML = gabaritoHTML(false); return; }
+  const m = h.match(/^jogar-([a-z0-9]{3,8})-(\d{6,12})$/);
+  if (m) iniciarCelular(m[1], +m[2]);
+  else iniciarTela();
+})();
+</script>
+
+</body></html>
