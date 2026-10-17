@@ -245,6 +245,17 @@ ol,ul{margin:0;padding:0;list-style:none}
 .letra-escolhida.riscada::after{content:"";position:absolute;left:-6%;right:-6%;top:46%;height:.09em;background:currentColor;transform:rotate(-14deg)}
 .ganho{font-family:var(--f-disp);font-weight:900;font-size:2rem!important}
 .cel-q{font-size:1.05rem;font-weight:700;line-height:1.3}
+.grande.compacto{flex:none;padding:12px 0 4px;gap:8px}
+.linha-res{display:flex;align-items:center;gap:18px}
+.linha-res .letra-escolhida{font-size:7.5rem}
+.linha-res h2{font-size:3.4rem}
+.linha-res p{font-size:1rem}
+.cel-res{padding:16px 16px 18px}
+.cel-res h2{font-size:1.7rem}
+.cel-res .passos li{font-size:1.02rem}
+.cel-res .fig{width:min(300px,100%)}
+.cel-det summary{cursor:pointer;font-weight:700;padding:12px 0;font-size:1.05rem}
+.cel-det[open] summary{padding-bottom:10px}
 .cel-q small{display:block;font-weight:400;margin-bottom:4px;opacity:.85}
 .cel-tempo{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;font-size:.95rem}
 .teclas{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1}
@@ -300,7 +311,7 @@ const QUESTOES = [
     titulo: "Quantos elétrons passam?",
     nivel: "Cálculo",
     conceitos: ["Corrente elétrica", "Carga elétrica", "Carga elementar"],
-    tempo: 60,
+    tempo: 90,
     contexto: "Corrente é carga em movimento: quanta carga atravessa o fio a cada segundo. E toda carga é um múltiplo inteiro da carga de um único elétron.",
     enunciado: "Um carregador de celular mantém uma corrente de 2 A no cabo durante 10 s. Quantos elétrons atravessaram uma seção do cabo nesse tempo? Use e = 1,6 × 10⁻¹⁹ C.",
     alternativas: ["20 elétrons", "1,25 × 10²⁰ elétrons", "3,2 × 10⁻¹⁸ elétrons", "1,25 × 10¹⁹ elétrons"],
@@ -317,30 +328,30 @@ const QUESTOES = [
     titulo: "O nó do circuito",
     nivel: "Aplicação",
     conceitos: ["Conservação da carga (lei dos nós)", "Corrente elétrica"],
-    tempo: 40,
+    tempo: 75,
     contexto: "Num nó, três ou mais fios se encontram. Carga não é criada nem destruída ali, então tudo o que chega precisa sair.",
     enunciado: "No nó P, chegam correntes de 5 A e 3 A. Por um dos fios saem 2 A. Qual é a corrente i no quarto fio, que também sai do nó?",
     figura: "no",
-    alternativas: ["10 A", "0 A", "4 A", "6 A"],
+    alternativas: ["10 A", "8 A", "4 A", "6 A"],
     certa: 3,
     passos: [
       "Lei dos nós (1ª lei de Kirchhoff): Σ i que entram = Σ i que saem.",
       "Entram 5 + 3 = 8 A. Saem 2 + i.",
       "8 = 2 + i, logo i = 6 A. Se a conta não fechasse, carga se acumularia no nó."
     ],
-    erradas: {0: "Somou todas as correntes, sem separar entrada de saída.", 1: "Supôs que nada sobra para o quarto fio, mas só 2 dos 8 A saíram.", 2: "Trocou o sentido de alguma corrente: 5 − 3 + 2."},
+    erradas: {0: "Somou todas as correntes (5 + 3 + 2), sem separar as que entram das que saem.", 1: "Somou só as correntes que entram e esqueceu os 2 A que já saem pelo outro fio.", 2: "Trocou o sentido de alguma corrente: 5 − 3 + 2."},
     justificativa: "Σ entram = Σ saem: 5 + 3 = 2 + i, então i = 6 A. É a conservação da carga aplicada a um ponto do circuito."
   },
   {
     titulo: "Verão ou inverno?",
     nivel: "Interpretação",
     conceitos: ["Efeito Joule", "Resistor", "Resistência", "Diferença de potencial elétrico"],
-    tempo: 45,
+    tempo: 75,
     contexto: "O chuveiro elétrico é um resistor: transforma energia elétrica em energia térmica pelo efeito Joule. A ddp da tomada não muda quando giramos a chave.",
     enunciado: "Ao passar a chave do chuveiro de \"verão\" para \"inverno\", a água sai mais quente. A ddp da rede continua 220 V. O que acontece com a resistência ligada?",
     alternativas: [
-      "Aumenta, porque resistência maior sempre gera mais calor",
-      "Não muda; o chuveiro só reduz a vazão da água",
+      "Aumenta, porque P = R · i² e mais resistência dissipa mais calor",
+      "Não muda; a chave só reduz a vazão da água",
       "Diminui, porque com ddp fixa a potência é P = ⟦V²|R⟧",
       "Aumenta, para que a corrente fique maior"
     ],
@@ -351,16 +362,16 @@ const QUESTOES = [
       "Potência dissipada: P = V · i = ⟦V²|R⟧. R menor, P maior, mais calor.",
       "Exemplo: um chuveiro de 5500 W em 220 V tem R = ⟦V²|P⟧ = ⟦220²|5500⟧ = 8,8 Ω."
     ],
-    erradas: {0: "P = R · i² parece dizer que R maior aquece mais, mas isso só vale com corrente fixa. Aqui a corrente muda junto.", 1: "A posição inverno muda o trecho de resistência ligado, não a vazão.", 3: "Resistência maior diminui a corrente, não aumenta."},
+    erradas: {0: "P = R · i² só diz que R maior aquece mais quando a corrente é fixa. Aqui a ddp é fixa e a corrente cai quando R aumenta.", 1: "A posição inverno muda o trecho de resistência ligado, não a vazão.", 3: "Resistência maior diminui a corrente, não aumenta."},
     justificativa: "Com V fixa, P = ⟦V²|R⟧: menos resistência significa mais corrente e mais potência dissipada por efeito Joule."
   },
   {
-    titulo: "A resistência da extensão",
+    titulo: "A resistência do fio",
     nivel: "Cálculo",
     conceitos: ["Resistividade", "Resistência", "Condutor", "Condutividade"],
-    tempo: 60,
+    tempo: 90,
     contexto: "A resistência de um fio depende do material, do comprimento e da espessura. O cobre é bom condutor porque tem resistividade muito baixa.",
-    enunciado: "Uma extensão tem 10 m de fio de cobre com seção de 1 mm². Qual a resistência desse fio? Use ρ do cobre = 1,7 × 10⁻⁸ Ω·m.",
+    enunciado: "Um fio de cobre de uma instalação tem 10 m de comprimento e seção de 1 mm². Qual é a resistência desse fio? Use ρ do cobre = 1,7 × 10⁻⁸ Ω·m.",
     alternativas: ["0,17 Ω", "1,7 × 10⁻⁷ Ω", "1,7 × 10⁻⁴ Ω", "5,9 Ω"],
     certa: 0,
     passos: [
@@ -376,7 +387,7 @@ const QUESTOES = [
     titulo: "Fio fino esquenta?",
     nivel: "Aplicação",
     conceitos: ["Densidade da corrente elétrica", "Efeito Joule", "Resistividade"],
-    tempo: 60,
+    tempo: 90,
     contexto: "Densidade de corrente mede quanta corrente passa por metro quadrado da seção do fio. Quanto mais concentrada a corrente, mais o fio esquenta.",
     enunciado: "Dois fios de cobre de mesmo comprimento conduzem 10 A cada. O fio X tem seção de 2,5 mm² e o fio Y, de 1,0 mm². Qual a densidade de corrente no fio Y, e qual fio esquenta mais?",
     figura: "fios",
@@ -401,14 +412,14 @@ const QUESTOES = [
 
 /* código de cores: a faixa da questão é a cor do dígito */
 const CAMPOS = {
-  corpo: {c: "#b8cfdf", t: "#12161a", a: "#12161a", x: 50, nome: ""},
+  corpo: {c: "#b8cfdf", t: "#12161a", a: "#8fc1e3", x: 50, nome: ""},
   1: {c: "#7a4320", t: "#fbf3ea", a: "#e0a26b", x: 30, nome: "marrom"},
   2: {c: "#d3271d", t: "#fff6f2", a: "#ff7b6b", x: 39, nome: "vermelho"},
   3: {c: "#f0731a", t: "#12161a", a: "#ff9a4d", x: 48, nome: "laranja"},
   4: {c: "#f6c915", t: "#12161a", a: "#f6c915", x: 57, nome: "amarelo"},
   5: {c: "#1f8f4a", t: "#f2fbf5", a: "#5fd38b", x: 66, nome: "verde"},
   ouro: {c: "#c9a13b", t: "#12161a", a: "#e5c46a", x: 82, nome: "ouro"},
-  aceso: {c: "#f7f8f6", t: "#12161a", a: "#12161a", x: 50, nome: ""}
+  aceso: {c: "#f7f8f6", t: "#12161a", a: "#f6c915", x: 50, nome: ""}
 };
 const LETRAS = ["A", "B", "C", "D"];
 const CORES_EQ = ["#2b59c3", "#7d3cb5", "#ffffff", "#15181b", "#8b9298", "#17a398", "#c2187a", "#c0c6cb"];
@@ -616,7 +627,7 @@ const respQ = q => H.resp[q] || {};
 function pontos(q, id) {
   const r = respQ(q)[id], t0 = H.t0[q];
   if (!r || t0 == null || r.alt !== QUESTOES[q].certa) return 0;
-  const frac = Math.max(0, Math.min(1, 1 - (r.t - t0) / QUESTOES[q].tempo));
+  const frac = Math.max(0, Math.min(1, 1 - (r.t - t0) / durQ(q)));
   return 500 + Math.round(500 * frac);
 }
 function qContada() { return ["revelada", "placar", "fim"].includes(H.fase) ? H.q : H.q - 1; }
@@ -627,7 +638,8 @@ function ranking() {
     return {...e, pts, ganho: ate >= 0 ? pontos(ate, e.id) : 0};
   }).sort((a, b) => b.pts - a.pts || H.ordem.indexOf(a.id) - H.ordem.indexOf(b.id));
 }
-const restante = q => Math.max(0, QUESTOES[q].tempo - (agoraS() - H.t0[q]));
+const durQ = q => QUESTOES[q].tempo + ((H.extra || {})[q] || 0);
+const restante = q => Math.max(0, durQ(q) - (agoraS() - H.t0[q]));
 
 function linkJogar() {
   const base = LINK_PUBLICO || (location.protocol.startsWith("http") ? location.origin + location.pathname + location.search : location.href.split("#")[0]);
@@ -666,7 +678,7 @@ function aoJogador(o, time) {
     if (t0 == null || !H.equipes[o.id] || ![0, 1, 2, 3].includes(o.alt)) return;
     H.resp[q] = H.resp[q] || {};
     if (H.resp[q][o.id]) return;
-    const limite = Math.min(t0 + QUESTOES[q].tempo + 2, H.tRev[q] ?? Infinity);
+    const limite = Math.min(t0 + durQ(q) + 2, H.tRev[q] ?? Infinity);
     if (time < t0 - 2 || time > limite) return;
     H.resp[q][o.id] = {alt: o.alt, t: Math.max(time, t0)};
     salvar(); atualizar();
@@ -679,7 +691,7 @@ function publicarEstado() {
   clearTimeout(pubTimer);
   pubTimer = setTimeout(() => {
     const q = H.q, eq = ranking().map(e => [e.id, e.nome, e.cor, e.pts, e.ganho]);
-    rede.publicar(T.h, {v: 2, f: H.fase, q, t0: H.t0[q] ?? null, eq}).catch(() => setTimeout(publicarEstado, 3000));
+    rede.publicar(T.h, {v: 2, f: H.fase, q, t0: H.t0[q] ?? null, dur: q >= 0 ? durQ(q) : null, eq}).catch(() => setTimeout(publicarEstado, 3000));
   }, 250);
 }
 
@@ -724,6 +736,12 @@ function clique(ev) {
   if (a === "avancar") avancar();
   if (a === "revelar" && H.fase === "pergunta") irPara("revelada", H.q);
   if (a === "simular") { simular(); b.disabled = true; }
+  if (a === "mais" && H.fase === "pergunta") {
+    const q = H.q; H.extra = H.extra || {};
+    if (restante(q) <= 0) H.extra[q] = (H.extra[q] || 0) + Math.ceil(agoraS() - H.t0[q] - durQ(q));
+    H.extra[q] = (H.extra[q] || 0) + 30; autoRev[q] = false;
+    salvar(); publicarEstado(); tick();
+  }
   if (a === "manual") { manual = !manual; b.textContent = manual ? "Esconder marcação manual" : "Marcar respostas manualmente"; atualizarVivo(); }
   if (a === "marcar" && H.fase === "pergunta") {
     const q = H.q; H.resp[q] = H.resp[q] || {};
@@ -855,7 +873,7 @@ function perguntaHTML() {
     <div style="display:grid;gap:12px">
       <ul class="equipes" id="lista"></ul>
       <div class="rodape"><p class="contagem" id="contagem"></p>
-        <div class="acoes"><button class="btn linha" data-a="manual">${manual ? "Esconder marcação manual" : "Marcar respostas manualmente"}</button><button class="btn" data-a="revelar">Revelar <small>R</small></button></div></div>
+        <div class="acoes"><button class="btn linha" data-a="mais">+30 s</button><button class="btn linha" data-a="manual">${manual ? "Esconder marcação manual" : "Marcar respostas manualmente"}</button><button class="btn" data-a="revelar">Revelar <small>R</small></button></div></div>
     </div>
   </section>`;
 }
@@ -914,7 +932,7 @@ function atualizarVivo() {
 
 function tick() {
   if (H.fase !== "pergunta" || vendoGab) return;
-  const q = H.q, dur = QUESTOES[q].tempo, rest = restante(q);
+  const q = H.q, dur = durQ(q), rest = restante(q);
   const s = document.getElementById("seg"); if (s) s.textContent = Math.ceil(rest);
   document.getElementById("crono")?.classList.toggle("fim", rest <= 5);
   const d = document.querySelector("#dreno i"); if (d) d.style.width = (rest / dur * 100) + "%";
@@ -1095,15 +1113,22 @@ function celJogo(e, eu, minha) {
       <div class="teclas">${Q.alternativas.map((t, i) => `<button class="tecla" data-alt="${i}"><span class="letra">${LETRAS[i]}</span><span class="txt">${mat(t)}</span></button>`).join("")}</div>`;
   }
   if (e.f === "revelada") {
-    if (minha == null) return topo + `<div class="grande"><h2>Sem resposta</h2><p>A certa era ${LETRAS[Q.certa]}. Vejam a explicação no projetor.</p></div>`;
+    const res = resolucaoCel(Q);
+    if (minha == null) return topo + `<div class="grande compacto"><h2>Sem resposta</h2><p>A certa era <b>${LETRAS[Q.certa]}</b>: ${mat(Q.alternativas[Q.certa])}</p></div>` + res;
     return topo + (minha === Q.certa
-      ? `<div class="grande"><p>Circuito fechado</p><h2>Acertou</h2><div class="letra-escolhida">${LETRAS[minha]}</div><p class="ganho">+${fmt(eu[4])} pontos</p></div>`
-      : `<div class="grande"><p>Circuito aberto</p><h2>Errou</h2><div class="letra-escolhida riscada">${LETRAS[minha]}</div><p>A certa era <b>${LETRAS[Q.certa]}</b>. A explicação está no projetor.</p></div>`);
+      ? `<div class="grande compacto"><p>Circuito fechado</p><div class="linha-res"><div class="letra-escolhida">${LETRAS[minha]}</div><div><h2>Acertou</h2><p class="ganho">+${fmt(eu[4])} pontos</p></div></div></div>`
+      : `<div class="grande compacto"><p>Circuito aberto</p><div class="linha-res"><div class="letra-escolhida riscada">${LETRAS[minha]}</div><div><h2>Errou</h2><p>A certa era <b>${LETRAS[Q.certa]}</b>: ${mat(Q.alternativas[Q.certa])}</p></div></div></div>`) + res;
   }
   const fim = e.f === "fim";
-  return topo + `<div class="grande"><p>${fim ? "Resultado final" : "Placar"}</p><h2>${pos}º lugar</h2><p>de ${e.eq.length} equipes, com ${fmt(eu[3])} pontos.${fim && pos === 1 ? " Vocês venceram." : ""}</p></div>`;
+  return topo + `<div class="grande"><p>${fim ? "Resultado final" : "Placar"}</p><h2>${pos}º lugar</h2><p>de ${e.eq.length} equipes, com ${fmt(eu[3])} pontos.${fim && pos === 1 ? " Vocês venceram." : ""}</p></div>
+    <details class="cel-det"><summary>Rever a resolução da questão ${e.q + 1}</summary>${resolucaoCel(Q)}</details>`;
 }
 
+function resolucaoCel(Q) {
+  return `<section class="explica cel-res"><h2>Resolução</h2>${Q.figura ? figura(Q.figura, true) : ""}
+    <ol class="passos">${Q.passos.map(p => `<li><span>${mat(p)}</span></li>`).join("")}</ol>
+    <h3>Conceitos do glossário</h3><div class="tags">${Q.conceitos.map(c => `<span class="tag">${esc(c)}</span>`).join("")}</div></section>`;
+}
 function cliqueCel(ev) {
   const t = ev.target.closest("[data-alt]"); if (!t || t.disabled) return;
   const e = P.estado; if (!e || e.f !== "pergunta" || P.minhas[e.q] != null) return;
@@ -1115,9 +1140,9 @@ function cliqueCel(ev) {
 function tickCel() {
   const el = document.getElementById("tCel"), e = P && P.estado;
   if (!el || !e || e.f !== "pergunta" || e.t0 == null) return;
-  const rest = Math.max(0, QUESTOES[e.q].tempo - (agoraS() - e.t0));
+  const rest = Math.max(0, (e.dur ?? QUESTOES[e.q].tempo) - (agoraS() - e.t0));
   el.textContent = Math.ceil(rest) + " s";
-  if (rest <= 0) document.querySelectorAll(".tecla").forEach(b => b.disabled = true);
+  document.querySelectorAll(".tecla").forEach(b => b.disabled = rest <= 0);
 }
 
 /* =========================================================================
