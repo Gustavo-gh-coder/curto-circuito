@@ -245,6 +245,11 @@ ol,ul{margin:0;padding:0;list-style:none}
 .letra-escolhida.riscada::after{content:"";position:absolute;left:-6%;right:-6%;top:46%;height:.09em;background:currentColor;transform:rotate(-14deg)}
 .ganho{font-family:var(--f-disp);font-weight:900;font-size:2rem!important}
 .cel-q{font-size:1.05rem;font-weight:700;line-height:1.3}
+.aviso-cel{background:#12161a;color:#f7f8f6;padding:10px 12px;font-weight:700;font-size:.95rem}
+.regra-cel{font-size:.95rem!important;opacity:.85}
+.saidas{font-weight:700;font-size:1.05rem}
+.saidas:empty{display:none}
+.eq .saiu{font-size:.8rem;padding:1px 6px;background:#12161a;color:#f6c915}
 .grande.compacto{flex:none;padding:12px 0 4px;gap:8px}
 .linha-res{display:flex;align-items:center;gap:18px}
 .linha-res .letra-escolhida{font-size:7.5rem}
@@ -628,7 +633,8 @@ function pontos(q, id) {
   const r = respQ(q)[id], t0 = H.t0[q];
   if (!r || t0 == null || r.alt !== QUESTOES[q].certa) return 0;
   const frac = Math.max(0, Math.min(1, 1 - (r.t - t0) / durQ(q)));
-  return 500 + Math.round(500 * frac);
+  const saiu = ((H.saidas || {})[q] || {})[id];
+  return 500 + (saiu ? 0 : Math.round(500 * frac));
 }
 function qContada() { return ["revelada", "placar", "fim"].includes(H.fase) ? H.q : H.q - 1; }
 function ranking() {
@@ -673,12 +679,19 @@ function aoJogador(o, time) {
     }
     publicarEstado();
   }
+  if (o.t === "saiu") {
+    const q = o.q;
+    if (H.t0[q] == null || !H.equipes[o.id] || time > (H.tRev[q] ?? Infinity) + 5) return;
+    H.saidas = H.saidas || {}; H.saidas[q] = H.saidas[q] || {};
+    H.saidas[q][o.id] = Math.max(H.saidas[q][o.id] || 0, Math.round(Number(o.s) || 0));
+    salvar(); atualizar();
+  }
   if (o.t === "resp") {
     const q = o.q, t0 = H.t0[q];
     if (t0 == null || !H.equipes[o.id] || ![0, 1, 2, 3].includes(o.alt)) return;
     H.resp[q] = H.resp[q] || {};
     if (H.resp[q][o.id]) return;
-    const limite = Math.min(t0 + durQ(q) + 2, H.tRev[q] ?? Infinity);
+    const limite = H.tRev[q] ?? Infinity; // depois do tempo ainda vale responder, até a revelação
     if (time < t0 - 2 || time > limite) return;
     H.resp[q][o.id] = {alt: o.alt, t: Math.max(time, t0)};
     salvar(); atualizar();
@@ -809,7 +822,7 @@ function lobbyHTML() {
         <h1 class="marca" aria-label="Curto-Circuito"><span class="palavra" aria-hidden="true">${letras("Curto-", 0)}</span><span class="palavra" aria-hidden="true">${letras("Circuito", 6)}</span></h1>
       </div>
       ${resistorGrande()}
-      <p class="legenda-res">Cada questão tem a cor da sua faixa no código de cores dos resistores. Acertar vale 500 pontos, e responder rápido rende até 500 de bônus.</p>
+      <p class="legenda-res">Cada questão tem a cor da sua faixa no código de cores dos resistores. Acertar vale 500 pontos, e responder rápido rende até 500 de bônus. Quem sair do jogo no celular durante uma questão perde o bônus.</p>
       <div class="acoes">
         <button class="btn" data-a="avancar" id="btnIr" disabled>Começar <small>Espaço</small></button>
         ${online ? "" : `<button class="btn linha" data-a="simular">Simular equipes</button>`}
@@ -872,6 +885,7 @@ function perguntaHTML() {
     ${altsHTML(false)}
     <div style="display:grid;gap:12px">
       <ul class="equipes" id="lista"></ul>
+      <p class="saidas" id="saidas"></p>
       <div class="rodape"><p class="contagem" id="contagem"></p>
         <div class="acoes"><button class="btn linha" data-a="mais">+30 s</button><button class="btn linha" data-a="manual">${manual ? "Esconder marcação manual" : "Marcar respostas manualmente"}</button><button class="btn" data-a="revelar">Revelar <small>R</small></button></div></div>
     </div>
@@ -884,7 +898,7 @@ function reveladaHTML() {
   return `<section style="display:grid;gap:18px">
     <div class="revela">
       <div style="display:grid;gap:14px;min-width:0">
-        <p class="contagem"><b>${acertos}</b> de ${eqs.length} equipes acertaram</p>
+        <p class="contagem"><b>${acertos}</b> de ${eqs.length} equipes acertaram</p><p class="saidas">${textoSaidas(H.q)}</p>
         <h1 class="enunciado" style="font-size:clamp(1.1rem,1.6vw,1.45rem)">${mat(Q.enunciado)}</h1>${altsHTML(true)}</div>
       <aside class="explica">
         <h2>Como chegar lá</h2>
@@ -914,11 +928,17 @@ function placarHTML(fim) {
   </section>`;
 }
 
+function textoSaidas(q) {
+  const sd = (H.saidas || {})[q] || {};
+  const nomes = eqLista().filter(e => sd[e.id]).map(e => `${esc(e.nome)} (${sd[e.id]} s)`);
+  return nomes.length ? `⚠ Saiu do jogo durante a questão e perdeu o bônus: ${nomes.join(", ")}` : "";
+}
 function atualizarVivo() {
   const eqs = eqLista(), lista = document.getElementById("lista");
   if (lista) {
     const r = H.fase === "pergunta" ? respQ(H.q) : {};
-    const html = eqs.length ? eqs.map(e => `<li class="eq${H.fase === "pergunta" && r[e.id] ? " feito" : ""}${chipsVistos.has(e.id) ? "" : " novo"}"><span class="cor" style="--c:${e.cor}"></span>${esc(e.nome)}${
+    const sd = H.fase === "pergunta" ? ((H.saidas || {})[H.q] || {}) : {};
+    const html = eqs.length ? eqs.map(e => `<li class="eq${H.fase === "pergunta" && r[e.id] ? " feito" : ""}${chipsVistos.has(e.id) ? "" : " novo"}"><span class="cor" style="--c:${e.cor}"></span>${esc(e.nome)}${sd[e.id] ? ` <span class="saiu">⚠ saiu</span>` : ""}${
       H.fase === "pergunta" && manual ? `<span class="manual">${LETRAS.map((l, i) => `<button data-a="marcar" data-id="${e.id}" data-alt="${i}" class="${r[e.id] && r[e.id].alt === i ? "sel" : ""}" aria-label="${esc(e.nome)} marcou ${l}">${l}</button>`).join("")}</span>` : ""}</li>`).join("")
       : `<li class="vazio">Nenhuma equipe ainda. Escaneiem o código.</li>`;
     if (lista.dataset.h !== html.replace(/ novo/g, "")) { lista.innerHTML = html; lista.dataset.h = html.replace(/ novo/g, ""); }
@@ -926,8 +946,10 @@ function atualizarVivo() {
   }
   const n = document.getElementById("nEq"); if (n) n.textContent = eqs.length;
   const ir = document.getElementById("btnIr"); if (ir) ir.disabled = !eqs.length;
+  const sEl = document.getElementById("saidas");
+  if (sEl) sEl.innerHTML = textoSaidas(H.q);
   const c = document.getElementById("contagem");
-  if (c && H.fase === "pergunta") c.innerHTML = `<b>${Object.keys(respQ(H.q)).length}</b> de ${eqs.length} equipes responderam`;
+  if (c && H.fase === "pergunta") { c.innerHTML = `<b>${Object.keys(respQ(H.q)).length}</b> de ${eqs.length} equipes responderam`; c.dataset.h = ""; }
 }
 
 function tick() {
@@ -936,8 +958,15 @@ function tick() {
   const s = document.getElementById("seg"); if (s) s.textContent = Math.ceil(rest);
   document.getElementById("crono")?.classList.toggle("fim", rest <= 5);
   const d = document.querySelector("#dreno i"); if (d) d.style.width = (rest / dur * 100) + "%";
-  const eqs = eqLista(), n = Object.keys(respQ(q)).length;
-  if (!autoRev[q] && (rest <= 0 || (eqs.length && n >= eqs.length && !manual))) {
+  const eqs = eqLista(), r = respQ(q), n = Object.keys(r).length;
+  const c = document.getElementById("contagem");
+  if (c && rest <= 0 && n < eqs.length) {
+    const faltam = eqs.filter(e => !r[e.id]).map(e => esc(e.nome)).join(", ");
+    const html = `<b>Tempo esgotado.</b> Esperando: ${faltam}`;
+    if (c.dataset.h !== html) { c.innerHTML = html; c.dataset.h = html; }
+  }
+  /* só revela sozinho quando TODAS as equipes responderem; R revela a qualquer momento */
+  if (!autoRev[q] && eqs.length && n >= eqs.length && !manual) {
     autoRev[q] = true;
     setTimeout(() => { if (H.fase === "pergunta" && H.q === q) irPara("revelada", q); }, 1300);
   }
@@ -1059,6 +1088,39 @@ async function iniciarCelular(sala, inicio) {
   setInterval(tickCel, 250);
   app.addEventListener("click", cliqueCel);
   app.addEventListener("submit", entrar);
+  vigiar();
+}
+
+/* anticola: sair do jogo (minimizar, trocar de app ou de aba) durante uma questão ainda sem resposta,
+   por mais de 2 s, tira o bônus de rapidez da equipe. A tela fica acesa para o bloqueio automático não contar. */
+let fora = null, wake = null;
+async function manterTelaAcesa() {
+  try {
+    if (navigator.wakeLock && !wake && document.visibilityState === "visible") {
+      wake = await navigator.wakeLock.request("screen");
+      wake.addEventListener("release", () => { wake = null; });
+    }
+  } catch (e) {}
+}
+function vigiar() {
+  document.addEventListener("visibilitychange", () => {
+    const e = P.estado;
+    if (document.visibilityState === "hidden") {
+      if (e && e.f === "pergunta" && euNoJogo() && P.minhas[e.q] == null) fora = {q: e.q, t: Date.now()};
+    } else {
+      manterTelaAcesa();
+      if (fora) {
+        const s = Math.round((Date.now() - fora.t) / 1000), q = fora.q; fora = null;
+        if (s > 2) {
+          P.avisos = P.avisos || {}; P.avisos[q] = s;
+          const enviar = (n = 0) => rede.publicar(T.p, {t: "saiu", id: P.id, q, s}).catch(() => n < 3 && setTimeout(() => enviar(n + 1), 1500));
+          enviar(); chaveCel = ""; desenharCel();
+        }
+      }
+    }
+  });
+  document.addEventListener("pointerdown", manterTelaAcesa, {passive: true});
+  manterTelaAcesa();
 }
 
 const euNoJogo = () => P.estado && P.id && P.estado.eq.find(e => e[0] === P.id);
@@ -1067,7 +1129,7 @@ function desenharCel() {
   const e = P.estado, eu = euNoJogo();
   if (eu) P.entrando = false;
   const f = e ? e.f : "lobby", q = e ? e.q : -1, minha = P.minhas[q];
-  const k = [eu ? "eu" : P.entrando ? "entrando" : "novo", f, q, minha ?? "-", eu ? eu[3] : "", e ? 1 : 0].join(":");
+  const k = [eu ? "eu" : P.entrando ? "entrando" : "novo", f, q, minha ?? "-", eu ? eu[3] : "", e ? 1 : 0, (P.avisos || {})[q] || 0].join(":");
   if (k === chaveCel) return;
   chaveCel = k;
   const acertou = eu && f === "revelada" && minha != null && minha === QUESTOES[q].certa;
@@ -1103,12 +1165,13 @@ function entrar(ev) {
 function celJogo(e, eu, minha) {
   const pos = e.eq.findIndex(x => x[0] === P.id) + 1;
   const topo = `<div class="cel-topo"><span class="cor" style="--c:${eu[2]}"></span><span class="quem"><b>${esc(eu[1])}</b><small>Sala ${esc(P.sala.toUpperCase())}</small></span><span class="pts">${fmt(eu[3])}</span></div>`;
-  if (e.f === "lobby") return topo + `<div class="grande"><h2>Equipe dentro</h2><p>Olhem para o projetor. A primeira questão abre em instantes.</p></div>`;
+  if (e.f === "lobby") return topo + `<div class="grande"><h2>Equipe dentro</h2><p>Olhem para o projetor. A primeira questão abre em instantes.</p><p class="regra-cel">Regra: não saiam do jogo durante as questões. Minimizar ou trocar de aplicativo tira o bônus da equipe.</p></div>`;
   const Q = QUESTOES[e.q];
   if (e.f === "intro") return topo + `<div class="grande"><p>Questão ${e.q + 1}</p><h2>${esc(Q.titulo)}</h2><p>As alternativas aparecem aqui quando a questão abrir.</p></div>`;
   if (e.f === "pergunta") {
     if (minha != null) return topo + `<div class="grande"><p>Resposta enviada</p><div class="letra-escolhida">${LETRAS[minha]}</div><p>Esperem a revelação no projetor.</p></div>`;
     return topo + `<p class="cel-q"><small>Questão ${e.q + 1} de ${QUESTOES.length}</small>${mat(Q.enunciado)}</p>
+      ${(P.avisos || {})[e.q] ? `<p class="aviso-cel">Vocês saíram do jogo por ${P.avisos[e.q]} s durante esta questão. A equipe perdeu o bônus de rapidez.</p>` : ""}
       <div class="cel-tempo"><span>Toque na alternativa</span><span id="tCel"></span></div>
       <div class="teclas">${Q.alternativas.map((t, i) => `<button class="tecla" data-alt="${i}"><span class="letra">${LETRAS[i]}</span><span class="txt">${mat(t)}</span></button>`).join("")}</div>`;
   }
@@ -1141,8 +1204,7 @@ function tickCel() {
   const el = document.getElementById("tCel"), e = P && P.estado;
   if (!el || !e || e.f !== "pergunta" || e.t0 == null) return;
   const rest = Math.max(0, (e.dur ?? QUESTOES[e.q].tempo) - (agoraS() - e.t0));
-  el.textContent = Math.ceil(rest) + " s";
-  document.querySelectorAll(".tecla").forEach(b => b.disabled = rest <= 0);
+  el.textContent = rest > 0 ? Math.ceil(rest) + " s" : "Tempo esgotado: respondam assim mesmo";
 }
 
 /* =========================================================================
